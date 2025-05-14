@@ -120,6 +120,37 @@ const addEmployee = async (
   }
 };
 
+const getAvailableDoctors = async () => {
+  const query = `
+    SELECT id, full_name, phone, branch, status 
+    FROM staff 
+    WHERE role = 'врач' AND status = 'активный';
+  `;
+  try {
+    const result = await db.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error getting available doctors:", error.message);
+    throw error;
+  }
+};
+
+const updateDoctorStatus = async (id, status) => {
+  const query = `
+    UPDATE staff 
+    SET status = $1 
+    WHERE id = $2 AND role = 'doctor' 
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [status, id]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating doctor status:", error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   findUserByEmail,
   createUser,
@@ -131,4 +162,6 @@ module.exports = {
   updateUserProfile,
   bookAppointment,
   addEmployee,
+  getAvailableDoctors,
+  updateDoctorStatus,
 };

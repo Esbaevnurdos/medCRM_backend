@@ -1,4 +1,4 @@
-const { addEmployee } = require("../db/queries");
+const db = require("../db/queries");
 
 const addEmployeeController = async (req, res) => {
   try {
@@ -7,11 +7,20 @@ const addEmployeeController = async (req, res) => {
     const { fullName, password, email, phone, address, branch, status, role } =
       req.body;
 
-    if (!fullName || !password || !email || !phone || !role) {
+    if (
+      !fullName ||
+      !password ||
+      !email ||
+      !phone ||
+      !role ||
+      !branch ||
+      !status ||
+      !address
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const newEmployee = await addEmployee(
+    const newEmployee = await db.addEmployee(
       fullName,
       password,
       email,

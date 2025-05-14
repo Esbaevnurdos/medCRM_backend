@@ -50,12 +50,13 @@ const updateProfile = async (req, res) => {
 
 const bookAppointmentController = async (req, res) => {
   const { patientId, doctorId, date, time, reason } = req.body;
+  console.log("Received data:", { patientId, doctorId, date, time, reason });
 
   try {
-    await bookAppointment(patientId, doctorId, date, time, reason);
+    await db.bookAppointment(patientId, doctorId, date, time, reason);
     res.json({ success: true, message: "Appointment booked successfully" });
   } catch (err) {
-    console.error("Error booking appointment:", err);
+    console.error("Error booking appointment:", err.message);
     res.status(500).json({ error: "Failed to book appointment" });
   }
 };
