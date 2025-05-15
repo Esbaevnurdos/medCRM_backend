@@ -120,6 +120,17 @@ const addEmployee = async (
   }
 };
 
+const deleteEmployee = async (id) => {
+  const query = `DELETE FROM staff WHERE id = $1;`;
+  try {
+    await db.query(query, [id]);
+    console.log("Employee deleted successfully");
+  } catch (error) {
+    console.error("Error deleting employee:", error.message);
+    throw error;
+  }
+};
+
 const getAvailableDoctors = async () => {
   const query = `
     SELECT id, full_name, phone, branch, status 
@@ -151,6 +162,57 @@ const updateDoctorStatus = async (id, status) => {
   }
 };
 
+const createRole = async (roleName, accessLevel = "basic") => {
+  const query = `
+    INSERT INTO roles (role_name, access_level)
+    VALUES ($1, $2)
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [roleName, accessLevel]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error creating role:", error.message);
+    throw error;
+  }
+};
+
+const getAllRoles = async () => {
+  const query = `SELECT * FROM roles;`;
+  try {
+    const result = await db.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching roles:", error.message);
+    throw error;
+  }
+};
+
+const updateRole = async (id, roleName, accessLevel) => {
+  const query = `
+    UPDATE roles SET role_name = $1, access_level = $2
+    WHERE id = $3
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [roleName, accessLevel, id]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating role:", error.message);
+    throw error;
+  }
+};
+
+const deleteRole = async (id) => {
+  const query = `DELETE FROM roles WHERE id = $1;`;
+  try {
+    await db.query(query, [id]);
+  } catch (error) {
+    console.error("Error deleting role:", error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   findUserByEmail,
   createUser,
@@ -164,4 +226,9 @@ module.exports = {
   addEmployee,
   getAvailableDoctors,
   updateDoctorStatus,
+  createRole,
+  getAllRoles,
+  updateRole,
+  deleteRole,
+  deleteEmployee,
 };
