@@ -213,6 +213,131 @@ const deleteRole = async (id) => {
   }
 };
 
+const addPermission = async (name, description, code) => {
+  const query = `
+    INSERT INTO permissions (name, description, code) 
+    VALUES ($1, $2, $3) 
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [name, description, code]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error adding permission:", error.message);
+    throw error;
+  }
+};
+
+const getAllPermissions = async () => {
+  const query = `SELECT * FROM permissions;`;
+  try {
+    const result = await db.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching permissions:", error.message);
+    throw error;
+  }
+};
+
+const updatePermission = async (id, name, description, code) => {
+  const query = `
+    UPDATE permissions 
+    SET name = $1, description = $2, code = $3 
+    WHERE id = $4 
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [name, description, code, id]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating permission:", error.message);
+    throw error;
+  }
+};
+
+const deletePermission = async (id) => {
+  const query = `DELETE FROM permissions WHERE id = $1;`;
+  try {
+    await db.query(query, [id]);
+    console.log("Permission deleted successfully");
+  } catch (error) {
+    console.error("Error deleting permission:", error.message);
+    throw error;
+  }
+};
+
+const addBranch = async (
+  name,
+  address,
+  email,
+  phoneNumber,
+  status = "Активный"
+) => {
+  const query = `
+    INSERT INTO branches (name, address, email, phone_number, status) 
+    VALUES ($1, $2, $3, $4, $5) 
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [
+      name,
+      address,
+      email,
+      phoneNumber,
+      status,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error adding branch:", error.message);
+    throw error;
+  }
+};
+
+const getAllBranches = async () => {
+  const query = `SELECT * FROM branches;`;
+  try {
+    const result = await db.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching branches:", error.message);
+    throw error;
+  }
+};
+
+const updateBranch = async (id, name, address, email, phoneNumber, status) => {
+  const query = `
+    UPDATE branches 
+    SET name = $1, address = $2, email = $3, phone_number = $4, status = $5 
+    WHERE id = $6 
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [
+      name,
+      address,
+      email,
+      phoneNumber,
+      status,
+      id,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating branch:", error.message);
+    throw error;
+  }
+};
+
+const deleteBranch = async (id) => {
+  const query = `DELETE FROM branches WHERE id = $1;`;
+  try {
+    await db.query(query, [id]);
+    console.log("Branch deleted successfully");
+  } catch (error) {
+    console.error("Error deleting branch:", error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   findUserByEmail,
   createUser,
@@ -231,4 +356,12 @@ module.exports = {
   updateRole,
   deleteRole,
   deleteEmployee,
+  addPermission,
+  getAllPermissions,
+  updatePermission,
+  deletePermission,
+  addBranch,
+  getAllBranches,
+  updateBranch,
+  deleteBranch,
 };
