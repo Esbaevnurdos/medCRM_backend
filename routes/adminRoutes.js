@@ -3,23 +3,64 @@ const adminController = require("../controllers/adminController");
 
 const router = express.Router();
 
-router.post("/addEmployee", adminController.addEmployeeController);
-router.delete("/employees/:id", adminController.deleteEmployeeController);
+router.post("/addEmployee", adminController.addUserController);
+router.delete("/employees/:id", adminController.deleteUserController);
 
 router.post("/roles", adminController.createRoleController);
 router.get("/roles", adminController.getRolesController);
 router.put("/roles/:id", adminController.updateRoleController);
 router.delete("/roles/:id", adminController.deleteRoleController);
+router.get("/roles/:id", adminController.getRoleByIdController);
 
-router.post("/permissions", adminController.addPermission); // Add a new permission
-router.get("/permissions", adminController.getAllPermissions); // Get all permissions
-router.put("/permissions/:id", adminController.updatePermission); // Update a permission
-router.delete("/permissions/:id", adminController.deletePermission); // Delete a permission
+router.post("/permissions", adminController.addPermission);
+router.get("/permissions", adminController.getAllPermissions);
+router.put("/permissions/:id", adminController.updatePermission);
+router.delete("/permissions/:id", adminController.deletePermission);
+router.get("/permissions/:id", adminController.getPermissionById);
 
-// Branches Routes
-router.post("/branches", adminController.addBranch); // Add a new branch
-router.get("/branches", adminController.getAllBranches); // Get all branches
-router.put("/branches/:id", adminController.updateBranch); // Update a branch
+router.post("/branches", adminController.addBranch);
+router.get("/branches", adminController.getAllBranches);
+router.put("/branches/:id", adminController.updateBranch);
 router.delete("/branches/:id", adminController.deleteBranch);
+router.get("/branches/:id", adminController.getBranchById);
+
+router.post("/specialists", adminController.addSpecialist);
+router.put("/specialists/:id", adminController.editSpecialist);
+router.delete("/specialists/:id", adminController.deleteSpecialist);
+router.get("/specialists", adminController.getAllSpecialists);
+router.get("/specialists/:id", adminController.getSpecialistById);
+
+router.post("/patients", adminController.addPatient);
+router.get("/patients", adminController.getAllPatients);
+router.put("/patients/:id", adminController.updatePatient);
+router.delete("/patients/:id", adminController.deletePatient);
+router.get("/patients/:id", adminController.getPatientById);
+
+router.post("/appointments", adminController.addAppointment);
+router.get("/appointments", adminController.getAllAppointments);
+router.put("/appointments/:id", adminController.updateAppointment);
+router.delete("/appointments/:id", adminController.deleteAppointment);
+router.get("/appointments/:id", adminController.getAppointmentById);
+
+router.post("/services", adminController.addService);
+router.get("/services", adminController.getAllServices);
+router.put("/services/:id", adminController.updateService);
+router.delete("/services/:id", adminController.deleteAppointment);
+router.get("/services/:id", adminController.getServiceById);
+
+router.post("/category_expences", adminController.addExpenseCategory);
+router.get("/category_expences", adminController.getExpenseCategories);
+router.put("/category_expences/:id", adminController.editExpenseCategory);
+router.delete("/category_expences/:id", adminController.deleteExpenseCategory);
+router.get("/category_expences/:id", adminController.getExpenseCategoryById);
+
+router.post("/expences", adminController.addExpense);
+router.get("/expences", adminController.getExpenses);
+router.put("/expences/:id", adminController.editExpense);
+router.delete("/expences/:id", adminController.deleteExpense);
+router.get("/expences/:id", adminController.getExpenseById);
+
+router.get("/organization", adminController.getOrganizationSettings);
+router.put("/organization", adminController.updateOrganizationSettings);
 
 module.exports = router;

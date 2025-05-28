@@ -134,9 +134,21 @@ const loginUser = async (req, res) => {
   }
 };
 
+const logoutUser = async (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).json({ error: "Server error during logout" });
+    }
+    res.clearCookie("connect.sid"); // or your session cookie name
+    res.json({ success: true, message: "User logged out successfully" });
+  });
+};
+
 module.exports = {
   registerUser,
   requestOTP,
   verifyAndSetPassword,
   loginUser,
+  logoutUser,
 };

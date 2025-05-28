@@ -85,7 +85,8 @@ const bookAppointment = async (patientId, doctorId, date, time, reason) => {
   }
 };
 
-const addEmployee = async (
+// Staff
+const addUser = async (
   fullName,
   password,
   email,
@@ -96,9 +97,9 @@ const addEmployee = async (
   role
 ) => {
   const query = `
-    INSERT INTO staff (full_name, password, email, phone, address, branch, status, role)
+    INSERT INTO users (fullname, password, email, phone_number, address, branch, status, role)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    RETURNING *;
+    RETURNING id, fullname, email, phone_number, role, status;
   `;
   const values = [
     fullName,
@@ -115,18 +116,73 @@ const addEmployee = async (
     const result = await db.query(query, values);
     return result.rows[0];
   } catch (error) {
-    console.error("Error in addEmployee query:", error.message);
+    console.error("Error in addUser query:", error.message);
     throw new Error("Database error");
   }
 };
 
-const deleteEmployee = async (id) => {
-  const query = `DELETE FROM staff WHERE id = $1;`;
+const deleteUser = async (id) => {
+  const query = `DELETE FROM users WHERE id = $1;`;
   try {
     await db.query(query, [id]);
-    console.log("Employee deleted successfully");
+    console.log("User deleted successfully");
   } catch (error) {
-    console.error("Error deleting employee:", error.message);
+    console.error("Error deleting user:", error.message);
+    throw error;
+  }
+};
+
+const getAllUsers = async () => {
+  const query = `SELECT id, fullname, email, phone_number, address, branch, status, role FROM users`;
+  try {
+    const result = await db.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
+    throw error;
+  }
+};
+
+const getUserById = async (id) => {
+  const query = `SELECT id, fullname, email, phone_number, address, branch, status, role FROM users WHERE id = $1`;
+  try {
+    const result = await db.query(query, [id]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error fetching user by ID:", error.message);
+    throw error;
+  }
+};
+
+const updateUser = async (
+  id,
+  fullName,
+  email,
+  phone,
+  address,
+  branch,
+  status,
+  role
+) => {
+  const query = `
+    UPDATE users
+    SET fullname = $2,
+        email = $3,
+        phone_number = $4,
+        address = $5,
+        branch = $6,
+        status = $7,
+        role = $8
+    WHERE id = $1
+    RETURNING id, fullname, email, phone_number, address, branch, status, role;
+  `;
+  const values = [id, fullName, email, phone, address, branch, status, role];
+
+  try {
+    const result = await db.query(query, values);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating user:", error.message);
     throw error;
   }
 };
@@ -203,6 +259,17 @@ const updateRole = async (id, roleName, accessLevel) => {
   }
 };
 
+const getRoleById = async (id) => {
+  const query = `SELECT * FROM roles WHERE id = $1;`;
+  try {
+    const result = await db.query(query, [id]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error fetching role by ID:", error.message);
+    throw error;
+  }
+};
+
 const deleteRole = async (id) => {
   const query = `DELETE FROM roles WHERE id = $1;`;
   try {
@@ -235,6 +302,17 @@ const getAllPermissions = async () => {
     return result.rows;
   } catch (error) {
     console.error("Error fetching permissions:", error.message);
+    throw error;
+  }
+};
+
+const getPermissionById = async (id) => {
+  const query = `SELECT * FROM permissions WHERE id = $1;`;
+  try {
+    const result = await db.query(query, [id]);
+    return result.rows[0]; // returns undefined if not found
+  } catch (error) {
+    console.error("Error fetching permission by ID:", error.message);
     throw error;
   }
 };
@@ -293,6 +371,20 @@ const addBranch = async (
   }
 };
 
+const getBranchById = async (id) => {
+  const query = `SELECT * FROM branches WHERE id = $1;`;
+  try {
+    const result = await db.query(query, [id]);
+    if (result.rows.length === 0) {
+      throw new Error("Branch not found");
+    }
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error fetching branch by ID:", error.message);
+    throw error;
+  }
+};
+
 const getAllBranches = async () => {
   const query = `SELECT * FROM branches;`;
   try {
@@ -338,6 +430,469 @@ const deleteBranch = async (id) => {
   }
 };
 
+const addSpecialist = async (
+  fio,
+  phoneNumber,
+  iin,
+  branch,
+  status = "Активный",
+  specialistType = "Внешний"
+) => {
+  const query = `
+    INSERT INTO specialists (name, phone_number, iin, branch, status, specialist_type) 
+    VALUES ($1, $2, $3, $4, $5, $6) 
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [
+      fio,
+      phoneNumber,
+      iin,
+      branch,
+      status,
+      specialistType,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error adding specialist:", error.message);
+    throw error;
+  }
+};
+
+const getAllSpecialists = async () => {
+  const query = `SELECT * FROM specialists;`;
+  try {
+    const result = await db.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching specialists:", error.message);
+    throw error;
+  }
+};
+
+const updateSpecialist = async (
+  id,
+  fio,
+  phoneNumber,
+  iin,
+  branch,
+  status,
+  specialistType
+) => {
+  const query = `
+    UPDATE specialists 
+    SET fio = $1, phone_number = $2, iin = $3, branch = $4, status = $5, specialist_type = $6 
+    WHERE id = $7 
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [
+      fio,
+      phoneNumber,
+      iin,
+      branch,
+      status,
+      specialistType,
+      id,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating specialist:", error.message);
+    throw error;
+  }
+};
+
+const getSpecialistById = async (id) => {
+  const query = `SELECT * FROM specialists WHERE id = $1;`;
+  try {
+    const result = await db.query(query, [id]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error fetching specialist by ID:", error.message);
+    throw error;
+  }
+};
+
+const deleteSpecialist = async (id) => {
+  const query = `DELETE FROM specialists WHERE id = $1;`;
+  try {
+    await db.query(query, [id]);
+    console.log("Specialist deleted successfully");
+  } catch (error) {
+    console.error("Error deleting specialist:", error.message);
+    throw error;
+  }
+};
+
+const addPatient = async (
+  name,
+  service,
+  paymentType,
+  appointmentDateTime,
+  specialist,
+  comment
+) => {
+  const query = `
+    INSERT INTO patients (name, service, payment_type, appointment_date_time, specialist, comment)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [
+      name,
+      service,
+      paymentType,
+      appointmentDateTime,
+      specialist,
+      comment,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error adding patient:", error.message);
+    throw error;
+  }
+};
+
+const getAllPatients = async () => {
+  const query = `SELECT * FROM patients ORDER BY appointment_date_time DESC;`;
+  try {
+    const result = await db.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching patients:", error.message);
+    throw error;
+  }
+};
+
+const getPatientById = async (id) => {
+  const query = `SELECT * FROM patients WHERE id = $1;`;
+  try {
+    const result = await db.query(query, [id]);
+    return result.rows[0]; // Returns undefined if not found
+  } catch (error) {
+    console.error("Error fetching patient by ID:", error.message);
+    throw error;
+  }
+};
+
+const updatePatient = async (
+  id,
+  name,
+  service,
+  paymentType,
+  appointmentDateTime,
+  specialist,
+  comment
+) => {
+  const query = `
+    UPDATE patients 
+    SET name = $1, service = $2, payment_type = $3, appointment_date_time = $4, specialist = $5, comment = $6
+    WHERE id = $7
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [
+      name,
+      service,
+      paymentType,
+      appointmentDateTime,
+      specialist,
+      comment,
+      id,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating patient:", error.message);
+    throw error;
+  }
+};
+
+const deletePatient = async (id) => {
+  const query = `DELETE FROM patients WHERE id = $1;`;
+  try {
+    await db.query(query, [id]);
+  } catch (error) {
+    console.error("Error deleting patient:", error.message);
+    throw error;
+  }
+};
+
+const addAppointment = async (
+  patientId,
+  specialistId,
+  service,
+  appointmentDateTime,
+  comment,
+  status
+) => {
+  const query = `
+    INSERT INTO appointments (patient_id, specialist_id, service, appointment_date_time, comment, status)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [
+      patientId,
+      specialistId,
+      service,
+      appointmentDateTime,
+      comment,
+      status,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error adding appointment:", error.message);
+    throw error;
+  }
+};
+
+const getAllAppointments = async () => {
+  const query = `
+    SELECT a.*, 
+           p.name AS patient_name,
+           s.name AS specialist_name
+    FROM appointments a
+    LEFT JOIN patients p ON a.patient_id = p.id
+    LEFT JOIN specialists s ON a.specialist_id = s.id
+    ORDER BY a.appointment_date_time DESC;
+  `;
+  try {
+    const result = await db.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching appointments:", error.message);
+    throw error;
+  }
+};
+
+const getAppointmentById = async (id) => {
+  const query = `
+    SELECT a.*, 
+           p.name AS patient_name,
+           s.name AS specialist_name
+    FROM appointments a
+    LEFT JOIN patients p ON a.patient_id = p.id
+    LEFT JOIN specialists s ON a.specialist_id = s.id
+    WHERE a.id = $1;
+  `;
+
+  try {
+    const result = await db.query(query, [id]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error fetching appointment by ID:", error.message);
+    throw error;
+  }
+};
+
+const updateAppointment = async (
+  id,
+  patientId,
+  specialistId,
+  service,
+  appointmentDateTime,
+  comment,
+  status
+) => {
+  const query = `
+    UPDATE appointments 
+    SET patient_id = $1, specialist_id = $2, service = $3, appointment_date_time = $4, comment = $5, status = $6
+    WHERE id = $7
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [
+      patientId,
+      specialistId,
+      service,
+      appointmentDateTime,
+      comment,
+      status,
+      id,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating appointment:", error.message);
+    throw error;
+  }
+};
+
+const deleteAppointment = async (id) => {
+  const query = `DELETE FROM appointments WHERE id = $1;`;
+  try {
+    await db.query(query, [id]);
+  } catch (error) {
+    console.error("Error deleting appointment:", error.message);
+    throw error;
+  }
+};
+
+const addService = async (name, description, price, isAvailable) => {
+  const query = `
+    INSERT INTO services (title, description, price, is_available)
+    VALUES ($1, $2, $3, $4) RETURNING *;
+  `;
+  const values = [name, description, price, isAvailable];
+  const result = await db.query(query, values);
+  return result.rows[0];
+};
+
+const updateService = async (id, name, description, price, isAvailable) => {
+  const query = `
+    UPDATE services
+    SET title = $1, description = $2, price = $3, is_available = $4
+    WHERE id = $5 RETURNING *;
+  `;
+  const values = [name, description, price, isAvailable, id];
+  const result = await db.query(query, values);
+  return result.rows[0];
+};
+
+const getServiceById = async (id) => {
+  const query = `SELECT * FROM services WHERE id = $1;`;
+  const result = await db.query(query, [id]);
+  return result.rows[0];
+};
+
+const deleteService = async (id) => {
+  const query = `DELETE FROM services WHERE id = $1;`;
+  await db.query(query, [id]);
+};
+
+const getAllServices = async () => {
+  const result = await db.query(
+    "SELECT * FROM services ORDER BY created_at DESC;"
+  );
+  return result.rows;
+};
+
+const addExpense = async (category, amount, description) => {
+  const query = `
+    INSERT INTO expenses (category, amount, description)
+    VALUES ($1, $2, $3)
+    RETURNING *;
+  `;
+  const values = [category, amount, description];
+  const result = await db.query(query, values);
+  return result.rows[0];
+};
+
+const getExpenses = async () => {
+  const result = await db.query(
+    `SELECT * FROM expenses ORDER BY created_at DESC`
+  );
+  return result.rows;
+};
+
+const getExpenseById = async (id) => {
+  const query = `SELECT * FROM expenses WHERE id = $1;`;
+  const result = await db.query(query, [id]);
+  return result.rows[0];
+};
+
+const updateExpense = async (id, category, amount, description) => {
+  const query = `
+    UPDATE expenses
+    SET category = $1, amount = $2, description = $3
+    WHERE id = $4
+    RETURNING *;
+  `;
+  const values = [category, amount, description, id];
+  const result = await db.query(query, values);
+  return result.rows[0];
+};
+
+const deleteExpense = async (id) => {
+  const query = `DELETE FROM expenses WHERE id = $1 RETURNING *;`;
+  const result = await db.query(query, [id]);
+  return result.rows[0];
+};
+
+const addExpenseCategory = async (name, description) => {
+  const query = `
+    INSERT INTO expense_categories (name, description)
+    VALUES ($1, $2)
+    RETURNING *;
+  `;
+  const values = [name, description];
+  const result = await db.query(query, values);
+  return result.rows[0];
+};
+
+const getExpenseCategories = async () => {
+  const result = await db.query(
+    `SELECT * FROM expense_categories ORDER BY created_at DESC`
+  );
+  return result.rows;
+};
+
+const getExpenseCategoryById = async (id) => {
+  const query = `SELECT * FROM expense_categories WHERE id = $1;`;
+  const result = await db.query(query, [id]);
+  return result.rows[0];
+};
+
+const updateExpenseCategory = async (id, name, description) => {
+  const query = `
+    UPDATE expense_categories
+    SET name = $1, description = $2
+    WHERE id = $3
+    RETURNING *;
+  `;
+  const values = [name, description, id];
+  const result = await db.query(query, values);
+  return result.rows[0];
+};
+
+const deleteExpenseCategory = async (id) => {
+  const query = `DELETE FROM expense_categories WHERE id = $1 RETURNING *;`;
+  const result = await db.query(query, [id]);
+  return result.rows[0];
+};
+
+// Get organization settings
+const getOrganizationSettings = async () => {
+  const query = `SELECT * FROM organization WHERE id = 1;`;
+  try {
+    const result = await db.query(query);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error fetching organization settings:", error.message);
+    throw error;
+  }
+};
+
+// Update organization settings
+const updateOrganizationSettings = async ({
+  name,
+  phone,
+  bin,
+  address,
+  director,
+  description,
+}) => {
+  const query = `
+    UPDATE organization
+    SET name = $1, phone = $2, bin = $3, address = $4, director = $5, description = $6
+    WHERE id = 1
+    RETURNING *;
+  `;
+  try {
+    const result = await db.query(query, [
+      name,
+      phone,
+      bin,
+      address,
+      director,
+      description,
+    ]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating organization settings:", error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   findUserByEmail,
   createUser,
@@ -348,20 +903,58 @@ module.exports = {
   createPatientRecord,
   updateUserProfile,
   bookAppointment,
-  addEmployee,
+  addUser,
+  deleteUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
   getAvailableDoctors,
   updateDoctorStatus,
   createRole,
   getAllRoles,
   updateRole,
   deleteRole,
-  deleteEmployee,
+  getRoleById,
   addPermission,
   getAllPermissions,
   updatePermission,
   deletePermission,
+  getPermissionById,
   addBranch,
   getAllBranches,
   updateBranch,
   deleteBranch,
+  getBranchById,
+  addSpecialist,
+  getAllSpecialists,
+  updateSpecialist,
+  getSpecialistById,
+  deleteSpecialist,
+  addPatient,
+  getAllPatients,
+  updatePatient,
+  deletePatient,
+  getPatientById,
+  addAppointment,
+  deleteAppointment,
+  updateAppointment,
+  getAllAppointments,
+  getAppointmentById,
+  addService,
+  deleteService,
+  getAllServices,
+  updateService,
+  getServiceById,
+  addExpense,
+  updateExpense,
+  deleteExpense,
+  getExpenseById,
+  getExpenses,
+  addExpenseCategory,
+  getExpenseCategories,
+  updateExpenseCategory,
+  deleteExpenseCategory,
+  getExpenseCategoryById,
+  getOrganizationSettings,
+  updateOrganizationSettings,
 };

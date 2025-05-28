@@ -1,9 +1,8 @@
 const db = require("../db/queries");
+// Staff
 
-const addEmployeeController = async (req, res) => {
+const addUserController = async (req, res) => {
   try {
-    console.log(req.body);
-
     const { fullName, password, email, phone, address, branch, status, role } =
       req.body;
 
@@ -20,7 +19,7 @@ const addEmployeeController = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const newEmployee = await db.addEmployee(
+    const newUser = await db.addUser(
       fullName,
       password,
       email,
@@ -33,26 +32,79 @@ const addEmployeeController = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Employee added successfully",
-      employee: newEmployee,
+      message: "User added successfully",
+      user: newUser,
     });
   } catch (error) {
-    console.error("Error adding employee:", error.message);
-    res.status(500).json({ error: "Server error during employee creation" });
+    console.error("Error adding user:", error.message);
+    res.status(500).json({ error: "Server error during user creation" });
   }
 };
 
-const deleteEmployeeController = async (req, res) => {
+const deleteUserController = async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.deleteEmployee(id);
+    await db.deleteUser(id);
     res
       .status(200)
-      .json({ success: true, message: "Employee deleted successfully" });
+      .json({ success: true, message: "User deleted successfully" });
   } catch (error) {
-    console.error("Error deleting employee:", error.message);
-    res.status(500).json({ error: "Server error during employee deletion" });
+    console.error("Error deleting user:", error.message);
+    res.status(500).json({ error: "Server error during user deletion" });
+  }
+};
+
+const getAllUsersController = async (req, res) => {
+  try {
+    const users = await db.getAllUsers();
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
+    res.status(500).json({ error: "Server error while fetching users" });
+  }
+};
+
+const getUserByIdController = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await db.getUserById(id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.error("Error fetching user by ID:", error.message);
+    res.status(500).json({ error: "Server error while fetching user" });
+  }
+};
+
+const updateUserController = async (req, res) => {
+  const { id } = req.params;
+  const { fullName, email, phone, address, branch, status, role } = req.body;
+
+  try {
+    const updatedUser = await db.updateUser(
+      id,
+      fullName,
+      email,
+      phone,
+      address,
+      branch,
+      status,
+      role
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error.message);
+    res.status(500).json({ error: "Server error during user update" });
   }
 };
 
@@ -125,6 +177,22 @@ const deleteRoleController = async (req, res) => {
   }
 };
 
+const getRoleByIdController = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const role = await db.getRoleById(id);
+
+    if (!role) {
+      return res.status(404).json({ error: "Role not found" });
+    }
+
+    res.status(200).json({ success: true, role });
+  } catch (error) {
+    console.error("Error getting role by ID:", error.message);
+    res.status(500).json({ error: "Server error while fetching role" });
+  }
+};
+
 const addPermission = async (req, res) => {
   const { name, description, code } = req.body;
   try {
@@ -151,7 +219,26 @@ const getAllPermissions = async (req, res) => {
   }
 };
 
-// Update Permission
+const getPermissionById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const permission = await db.getPermissionById(id);
+
+    if (!permission) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Permission not found" });
+    }
+
+    res.status(200).json({ success: true, data: permission });
+  } catch (error) {
+    console.error("Error fetching permission by ID:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch permission" });
+  }
+};
+
 const updatePermission = async (req, res) => {
   const { id } = req.params;
   const { name, description, code } = req.body;
@@ -204,7 +291,17 @@ const addBranch = async (req, res) => {
   }
 };
 
-// Get All Branches
+const getBranchById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const branch = await db.getBranchById(id);
+    res.status(200).json({ success: true, data: branch });
+  } catch (error) {
+    console.error("Error fetching branch by ID:", error.message);
+    res.status(404).json({ success: false, message: "Branch not found" });
+  }
+};
+
 const getAllBranches = async (req, res) => {
   try {
     const branches = await db.getAllBranches();
@@ -217,7 +314,6 @@ const getAllBranches = async (req, res) => {
   }
 };
 
-// Update Branch
 const updateBranch = async (req, res) => {
   const { id } = req.params;
   const { name, address, email, phoneNumber, status } = req.body;
@@ -239,7 +335,6 @@ const updateBranch = async (req, res) => {
   }
 };
 
-// Delete Branch
 const deleteBranch = async (req, res) => {
   const { id } = req.params;
   try {
@@ -255,19 +350,633 @@ const deleteBranch = async (req, res) => {
   }
 };
 
+const addSpecialist = async (req, res) => {
+  const {
+    name,
+    phoneNumber,
+    iin,
+    branch,
+    status = "Активный",
+    specialistType = "Внешний",
+  } = req.body;
+  try {
+    const specialist = await db.addSpecialist(
+      name,
+      phoneNumber,
+      iin,
+      branch,
+      status,
+      specialistType
+    );
+    res.status(201).json({ success: true, data: specialist });
+  } catch (error) {
+    console.error("Error adding specialist:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to add specialist" });
+  }
+};
+
+const editSpecialist = async (req, res) => {
+  const { id } = req.params;
+  const { name, phoneNumber, iin, branch, status, specialistType } = req.body;
+  try {
+    const updatedSpecialist = await db.editSpecialist(
+      id,
+      name,
+      phoneNumber,
+      iin,
+      branch,
+      status,
+      specialistType
+    );
+    res.status(200).json({ success: true, data: updatedSpecialist });
+  } catch (error) {
+    console.error("Error updating specialist:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update specialist" });
+  }
+};
+
+const deleteSpecialist = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.deleteSpecialist(id);
+    res
+      .status(200)
+      .json({ success: true, message: "Specialist deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting specialist:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete specialist" });
+  }
+};
+
+const getSpecialistById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const specialist = await db.getSpecialistById(id);
+    if (!specialist) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Specialist not found" });
+    }
+    res.status(200).json({ success: true, data: specialist });
+  } catch (error) {
+    console.error("Error fetching specialist by ID:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch specialist" });
+  }
+};
+
+const getAllSpecialists = async (req, res) => {
+  try {
+    const specialists = await db.getAllSpecialists();
+    res.status(200).json({ success: true, data: specialists });
+  } catch (error) {
+    console.error("Error fetching specialists:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch specialists" });
+  }
+};
+
+const addPatient = async (req, res) => {
+  const {
+    name,
+    service,
+    paymentType = "Карта",
+    appointmentDateTime,
+    specialist,
+    comment,
+  } = req.body;
+
+  try {
+    const patient = await db.addPatient(
+      name,
+      service,
+      paymentType,
+      appointmentDateTime,
+      specialist,
+      comment
+    );
+    res.status(201).json({ success: true, data: patient });
+  } catch (error) {
+    console.error("Error adding patient:", error.message);
+    res.status(500).json({ success: false, message: "Failed to add patient" });
+  }
+};
+
+const getAllPatients = async (req, res) => {
+  try {
+    const patients = await db.getAllPatients();
+    res.status(200).json({ success: true, data: patients });
+  } catch (error) {
+    console.error("Error fetching patients:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch patients" });
+  }
+};
+
+const updatePatient = async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    service,
+    paymentType,
+    appointmentDateTime,
+    specialist,
+    comment,
+  } = req.body;
+
+  try {
+    const updatedPatient = await db.updatePatient(
+      id,
+      name,
+      service,
+      paymentType,
+      appointmentDateTime,
+      specialist,
+      comment
+    );
+    res.status(200).json({ success: true, data: updatedPatient });
+  } catch (error) {
+    console.error("Error updating patient:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update patient" });
+  }
+};
+
+const getPatientById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const patient = await db.getPatientById(id);
+
+    if (!patient) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Patient not found" });
+    }
+
+    res.status(200).json({ success: true, data: patient });
+  } catch (error) {
+    console.error("Error fetching patient by ID:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch patient" });
+  }
+};
+
+const deletePatient = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.deletePatient(id);
+    res
+      .status(200)
+      .json({ success: true, message: "Patient deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting patient:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete patient" });
+  }
+};
+
+const addAppointment = async (req, res) => {
+  const {
+    patientId,
+    specialistId,
+    service,
+    appointmentDateTime,
+    comment,
+    status = "Ожидает",
+  } = req.body;
+
+  try {
+    const appointment = await db.addAppointment(
+      patientId,
+      specialistId,
+      service,
+      appointmentDateTime,
+      comment,
+      status
+    );
+    res.status(201).json({ success: true, data: appointment });
+  } catch (error) {
+    console.error("Error adding appointment:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to add appointment" });
+  }
+};
+
+const getAllAppointments = async (req, res) => {
+  try {
+    const appointments = await db.getAllAppointments();
+    res.status(200).json({ success: true, data: appointments });
+  } catch (error) {
+    console.error("Error fetching appointments:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch appointments" });
+  }
+};
+
+const updateAppointment = async (req, res) => {
+  const { id } = req.params;
+  const {
+    patientId,
+    specialistId,
+    service,
+    appointmentDateTime,
+    comment,
+    status,
+  } = req.body;
+
+  try {
+    const updated = await db.updateAppointment(
+      id,
+      patientId,
+      specialistId,
+      service,
+      appointmentDateTime,
+      comment,
+      status
+    );
+    res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    console.error("Error updating appointment:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update appointment" });
+  }
+};
+
+const getAppointmentById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const appointment = await db.getAppointmentById(id);
+
+    if (!appointment) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found" });
+    }
+
+    res.status(200).json({ success: true, data: appointment });
+  } catch (error) {
+    console.error("Error fetching appointment:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch appointment" });
+  }
+};
+
+const deleteAppointment = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.deleteAppointment(id);
+    res
+      .status(200)
+      .json({ success: true, message: "Appointment deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting appointment:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete appointment" });
+  }
+};
+
+const addService = async (req, res) => {
+  const { title, description, price, isAvailable = true } = req.body;
+
+  try {
+    const service = await db.addService(title, description, price, isAvailable);
+    res.status(201).json({ success: true, data: service });
+  } catch (error) {
+    console.error("Error adding service:", error.message);
+    res.status(500).json({ success: false, message: "Failed to add service" });
+  }
+};
+
+const updateService = async (req, res) => {
+  const { id } = req.params;
+  const { name, description, price, isAvailable } = req.body;
+
+  try {
+    const updated = await db.updateService(
+      id,
+      name,
+      description,
+      price,
+      isAvailable
+    );
+    res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    console.error("Error updating service:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update service" });
+  }
+};
+
+const getServiceById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const service = await db.getServiceById(id);
+    if (!service) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Service not found" });
+    }
+    res.status(200).json({ success: true, data: service });
+  } catch (error) {
+    console.error("Error fetching service by ID:", error.message);
+    res.status(500).json({ success: false, message: "Failed to get service" });
+  }
+};
+
+const deleteService = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await db.deleteService(id);
+    res.status(200).json({ success: true, message: "Service deleted" });
+  } catch (error) {
+    console.error("Error deleting service:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete service" });
+  }
+};
+
+const getAllServices = async (_req, res) => {
+  try {
+    const services = await db.getAllServices();
+    res.status(200).json({ success: true, data: services });
+  } catch (error) {
+    console.error("Error fetching services:", error.message);
+    res.status(500).json({ success: false, message: "Failed to get services" });
+  }
+};
+
+const addExpense = async (req, res) => {
+  const { category, amount, description } = req.body;
+
+  try {
+    const expense = await db.addExpense(category, amount, description);
+    res.status(201).json({ success: true, data: expense });
+  } catch (error) {
+    console.error("Error adding expense:", error.message);
+    res.status(500).json({ success: false, message: "Failed to add expense" });
+  }
+};
+
+const getExpenses = async (_req, res) => {
+  try {
+    const expenses = await db.getExpenses();
+    res.status(200).json({ success: true, data: expenses });
+  } catch (error) {
+    console.error("Error fetching expenses:", error.message);
+    res.status(500).json({ success: false, message: "Failed to get expenses" });
+  }
+};
+
+const getExpenseById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const expense = await db.getExpenseById(id);
+    if (!expense) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Expense not found" });
+    }
+    res.status(200).json({ success: true, data: expense });
+  } catch (error) {
+    console.error("Error fetching expense by ID:", error.message);
+    res.status(500).json({ success: false, message: "Failed to get expense" });
+  }
+};
+
+const editExpense = async (req, res) => {
+  const { id } = req.params;
+  const { category, amount, description } = req.body;
+
+  try {
+    const expense = await db.updateExpense(id, category, amount, description);
+    if (!expense) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Expense not found" });
+    }
+    res.status(200).json({ success: true, data: expense });
+  } catch (error) {
+    console.error("Error updating expense:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update expense" });
+  }
+};
+
+const deleteExpense = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const expense = await db.deleteExpense(id);
+    if (!expense) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Expense not found" });
+    }
+    res
+      .status(200)
+      .json({ success: true, message: "Expense deleted", data: expense });
+  } catch (error) {
+    console.error("Error deleting expense:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete expense" });
+  }
+};
+
+const addExpenseCategory = async (req, res) => {
+  const { name, description } = req.body;
+
+  try {
+    const category = await db.addExpenseCategory(name, description);
+    res.status(201).json({ success: true, data: category });
+  } catch (error) {
+    console.error("Error adding expense category:", error.message);
+    res.status(500).json({ success: false, message: "Failed to add category" });
+  }
+};
+
+const getExpenseCategories = async (_req, res) => {
+  try {
+    const categories = await db.getExpenseCategories();
+    res.status(200).json({ success: true, data: categories });
+  } catch (error) {
+    console.error("Error getting expense categories:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch categories" });
+  }
+};
+
+const editExpenseCategory = async (req, res) => {
+  const { id } = req.params;
+  const { name, description } = req.body;
+
+  try {
+    const category = await db.updateExpenseCategory(id, name, description);
+    if (!category) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Category not found" });
+    }
+    res.status(200).json({ success: true, data: category });
+  } catch (error) {
+    console.error("Error updating category:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update category" });
+  }
+};
+
+const getExpenseCategoryById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const category = await db.getExpenseCategoryById(id);
+    if (!category) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Category not found" });
+    }
+    res.status(200).json({ success: true, data: category });
+  } catch (error) {
+    console.error("Error fetching category by ID:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch category" });
+  }
+};
+
+const deleteExpenseCategory = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const category = await db.deleteExpenseCategory(id);
+    if (!category) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Category not found" });
+    }
+    res
+      .status(200)
+      .json({ success: true, message: "Category deleted", data: category });
+  } catch (error) {
+    console.error("Error deleting category:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete category" });
+  }
+};
+
+// GET /organization
+const getOrganizationSettings = async (req, res) => {
+  try {
+    const settings = await db.getOrganizationSettings();
+    res.status(200).json({ success: true, data: settings });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch organization settings",
+    });
+  }
+};
+
+// PUT /organization
+const updateOrganizationSettings = async (req, res) => {
+  const { name, phone, bin, address, director, description } = req.body;
+  try {
+    const updated = await db.updateOrganizationSettings({
+      name,
+      phone,
+      bin,
+      address,
+      director,
+      description,
+    });
+    res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update organization settings",
+    });
+  }
+};
+
 module.exports = {
-  addEmployeeController,
-  deleteEmployeeController,
+  addUserController,
+  deleteUserController,
+  getAllUsersController,
+  getUserByIdController,
+  updateUserController,
   createRoleController,
   getRolesController,
   updateRoleController,
   deleteRoleController,
+  getRoleByIdController,
   addBranch,
   getAllBranches,
   updateBranch,
   deleteBranch,
+  getBranchById,
   addPermission,
   getAllPermissions,
   updatePermission,
   deletePermission,
+  getPermissionById,
+  addSpecialist,
+  editSpecialist,
+  getAllSpecialists,
+  deleteSpecialist,
+  getSpecialistById,
+  deletePatient,
+  getPatientById,
+  addPatient,
+  updatePatient,
+  getAllPatients,
+  addAppointment,
+  updateAppointment,
+  deleteAppointment,
+  getAppointmentById,
+  getAllAppointments,
+  addService,
+  getAllServices,
+  deleteService,
+  getServiceById,
+  updateService,
+  addExpense,
+  getExpenses,
+  editExpense,
+  getExpenseById,
+  deleteExpense,
+  addExpenseCategory,
+  getExpenseCategories,
+  editExpenseCategory,
+  deleteExpenseCategory,
+  getExpenseCategoryById,
+  getOrganizationSettings,
+  updateOrganizationSettings,
 };
