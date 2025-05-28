@@ -3,8 +3,11 @@ const adminController = require("../controllers/adminController");
 
 const router = express.Router();
 
-router.post("/addEmployee", adminController.addUserController);
-router.delete("/employees/:id", adminController.deleteUserController);
+router.post("/staff", adminController.addUserController);
+router.delete("/staff/:id", adminController.deleteUserController);
+router.get("/staff", adminController.getAllUsersController);
+router.put("/sfaff/:id", adminController.updateUserController);
+router.get("/staff/:id", adminController.getUserByIdController);
 
 router.post("/roles", adminController.createRoleController);
 router.get("/roles", adminController.getRolesController);
