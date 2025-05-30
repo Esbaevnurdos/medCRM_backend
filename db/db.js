@@ -8,17 +8,16 @@ const pool = new Pool(
   isProduction
     ? {
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }, // Render requires SSL
+        ssl: { rejectUnauthorized: false },
       }
     : {
         user: process.env.DB_USER,
-        host: process.env.DB_HOST,
+        host: process.env.DB_HOST || "base", // <- if you have this fallback "base", change/remove it
         database: process.env.DB_NAME,
         password: process.env.DB_PASSWORD,
         port: process.env.DB_PORT,
       }
 );
-
 pool.query("SELECT NOW()", (err, res) => {
   if (err) {
     console.error("Database connection error:", err);
