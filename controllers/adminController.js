@@ -125,6 +125,10 @@ const createRoleController = async (req, res) => {
       role: newRole,
     });
   } catch (error) {
+    if (error.message === "Role already exists") {
+      return res.status(409).json({ error: "Role already exists" }); // 409 = Conflict
+    }
+
     console.error("Error creating role:", error.message);
     res.status(500).json({ error: "Server error during role creation" });
   }

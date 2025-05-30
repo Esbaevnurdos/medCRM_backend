@@ -97,9 +97,9 @@ const addUser = async (
   role
 ) => {
   const query = `
-    INSERT INTO users (fullname, password, email, phone_number, address, branch, status, role)
+    INSERT INTO staff (full_name, password, email, phone, address, branch, status, role)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    RETURNING id, fullname, email, phone_number, role, status;
+    RETURNING id, full_name, email, phone, role, status;
   `;
   const values = [
     fullName,
@@ -122,7 +122,7 @@ const addUser = async (
 };
 
 const deleteUser = async (id) => {
-  const query = `DELETE FROM users WHERE id = $1;`;
+  const query = `DELETE FROM staff WHERE id = $1;`;
   try {
     await db.query(query, [id]);
     console.log("User deleted successfully");
@@ -133,7 +133,7 @@ const deleteUser = async (id) => {
 };
 
 const getAllUsers = async () => {
-  const query = `SELECT id, fullname, email, phone_number, address, branch, status, role FROM users`;
+  const query = `SELECT id, full_name, email, phone, address, branch, status, role FROM staff`;
   try {
     const result = await db.query(query);
     return result.rows;
@@ -144,7 +144,7 @@ const getAllUsers = async () => {
 };
 
 const getUserById = async (id) => {
-  const query = `SELECT id, fullname, email, phone_number, address, branch, status, role FROM users WHERE id = $1`;
+  const query = `SELECT id, full_name, email, phone, address, branch, status, role FROM staff WHERE id = $1`;
   try {
     const result = await db.query(query, [id]);
     return result.rows[0];
@@ -165,8 +165,8 @@ const updateUser = async (
   role
 ) => {
   const query = `
-    UPDATE users
-    SET fullname = $2,
+    UPDATE staff
+    SET full_name = $2,
         email = $3,
         phone_number = $4,
         address = $5,
@@ -174,7 +174,7 @@ const updateUser = async (
         status = $7,
         role = $8
     WHERE id = $1
-    RETURNING id, fullname, email, phone_number, address, branch, status, role;
+    RETURNING id, fullname, email, phone, address, branch, status, role;
   `;
   const values = [id, fullName, email, phone, address, branch, status, role];
 
@@ -219,13 +219,21 @@ const updateDoctorStatus = async (id, status) => {
 };
 
 const createRole = async (roleName, accessLevel = "basic") => {
-  const query = `
+  // Check for existing role first
+  const checkQuery = `SELECT * FROM roles WHERE role_name = $1;`;
+  const existing = await db.query(checkQuery, [roleName]);
+
+  if (existing.rows.length > 0) {
+    throw new Error("Role already exists");
+  }
+
+  const insertQuery = `
     INSERT INTO roles (role_name, access_level)
     VALUES ($1, $2)
     RETURNING *;
   `;
   try {
-    const result = await db.query(query, [roleName, accessLevel]);
+    const result = await db.query(insertQuery, [roleName, accessLevel]);
     return result.rows[0];
   } catch (error) {
     console.error("Error creating role:", error.message);
