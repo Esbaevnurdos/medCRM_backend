@@ -1,6 +1,9 @@
 require("dotenv").config();
 const { Pool } = require("pg");
 
+// Define isProduction here:
+const isProduction = process.env.NODE_ENV === "production";
+
 const pool = new Pool(
   isProduction
     ? {
@@ -15,6 +18,7 @@ const pool = new Pool(
         port: process.env.DB_PORT,
       }
 );
+
 pool.query("SELECT NOW()", (err, res) => {
   if (err) {
     console.error("Database connection error:", err);
