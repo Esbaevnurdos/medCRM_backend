@@ -931,24 +931,25 @@ const updateOrganizationSettings = async (req, res) => {
 };
 
 const getExpenseReport = async (req, res) => {
-  const { type, start_date, end_date } = req.query;
+  const { start_date, end_date } = req.query;
+  const { type } = req.params; // ✅ fix here
 
-  let groupBy;
-  let dateFilter = "";
-  let values = [];
+  let groupBy,
+    dateFilter = "",
+    values = [];
 
   switch (type) {
     case "daily":
-      groupBy = `TO_CHAR(created_at, 'YYYY-MM-DD')`;
+      groupBy = "TO_CHAR(created_at, 'YYYY-MM-DD')";
       break;
     case "weekly":
-      groupBy = `DATE_TRUNC('week', created_at)`;
+      groupBy = "TO_CHAR(DATE_TRUNC('week', created_at), 'YYYY-MM-DD')";
       break;
     case "monthly":
-      groupBy = `TO_CHAR(created_at, 'YYYY-MM')`;
+      groupBy = "TO_CHAR(created_at, 'YYYY-MM')";
       break;
     case "yearly":
-      groupBy = `TO_CHAR(created_at, 'YYYY')`;
+      groupBy = "TO_CHAR(created_at, 'YYYY')";
       break;
     case "custom-range":
       if (!start_date || !end_date) {
@@ -956,8 +957,8 @@ const getExpenseReport = async (req, res) => {
           .status(400)
           .json({ success: false, message: "Missing start_date or end_date" });
       }
-      groupBy = `TO_CHAR(created_at, 'YYYY-MM-DD')`;
-      dateFilter = `WHERE created_at BETWEEN $1 AND $2`;
+      groupBy = "TO_CHAR(created_at, 'YYYY-MM-DD')";
+      dateFilter = "WHERE created_at BETWEEN $1 AND $2";
       values = [start_date, end_date];
       break;
     default:
@@ -967,19 +968,19 @@ const getExpenseReport = async (req, res) => {
   const query = `
     SELECT
       ${groupBy} AS created_at,
-      SUM(amount) AS totalExpenses,
+      SUM(amount)::numeric AS totalExpenses,
       JSON_OBJECT_AGG(category, sum_per_cat) AS categoriesSummary
     FROM (
       SELECT
-        ${groupBy} AS created_at,
+        ${groupBy} AS group_date,
         category,
-        SUM(amount) AS sum_per_cat
+        SUM(amount)::numeric AS sum_per_cat
       FROM expenses
       ${dateFilter}
-      GROUP BY ${groupBy}, category
-    ) sub
+      GROUP BY group_date, category
+    ) AS sub
     GROUP BY created_at
-    ORDER BY created_at DESC
+    ORDER BY created_at DESC;
   `;
 
   try {
