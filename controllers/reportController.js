@@ -1,4 +1,4 @@
-const db = require("../db/queries/reportQueries");
+const db = require("../db/reportQueries");
 
 const getDailyExpenseReport = async (req, res) => {
   try {
