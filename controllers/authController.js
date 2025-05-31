@@ -17,7 +17,7 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ error: "Email already in use" });
     }
 
-    const existingPhone = await db.findUserByPhone(phone);
+    const existingPhone = await db.findUserByPhoneNumber(phone);
     if (existingPhone.rows.length > 0) {
       return res.status(400).json({ error: "Phone number already in use" });
     }
