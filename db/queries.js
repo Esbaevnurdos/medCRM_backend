@@ -1,12 +1,10 @@
 const db = require("./db");
 
-const db = require("./db");
-
 const findUserByEmail = async (email) => {
   return await db.query("SELECT * FROM users WHERE email = $1", [email]);
 };
 
-const findUserByPhone = async (phone) => {
+const findUserByPhoneNumber = async (phone) => {
   return await db.query("SELECT * FROM users WHERE phone = $1", [phone]);
 };
 
