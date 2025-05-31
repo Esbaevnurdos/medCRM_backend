@@ -2,9 +2,6 @@ const db = require("../db/queries");
 const bcrypt = require("bcryptjs");
 const sendOTPEmail = require("../utils/emailService");
 
-const db = require("../db/queries");
-const sendOTPEmail = require("../utils/emailService");
-
 const registerUser = async (req, res) => {
   try {
     const { full_name, email, phone, address, branch, status, role } = req.body;
