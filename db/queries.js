@@ -8,24 +8,14 @@ const findUserByPhoneNumber = async (phone) => {
   return await db.query("SELECT * FROM users WHERE phone = $1", [phone]);
 };
 
-const createUser = async (
-  full_name,
-  email,
-  phone,
-  otp,
-  otpExpiry,
-  address,
-  branch,
-  status,
-  role
-) => {
+const createUser = async (full_name, email, phone, otp, otpExpiry) => {
   try {
     return await db.query(
       `INSERT INTO users 
         (full_name, email, phone, password, otp_code, otp_expiry, is_verified, address, branch, status, role)
-       VALUES ($1, $2, $3, NULL, $4, $5, false, $6, $7, $8, $9)
+       VALUES ($1, $2, $3, NULL, $4, $5, false, NULL, NULL, NULL, NULL)
        RETURNING id, full_name, email, phone`,
-      [full_name, email, phone, otp, otpExpiry, address, branch, status, role]
+      [full_name, email, phone, otp, otpExpiry]
     );
   } catch (error) {
     console.error("Error during user creation:", error);

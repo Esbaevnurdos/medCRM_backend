@@ -4,7 +4,13 @@ const sendOTPEmail = require("../utils/emailService");
 
 const registerUser = async (req, res) => {
   try {
-    const { full_name, email, phone, address, branch, status, role } = req.body;
+    const { full_name, email, phone } = req.body;
+
+    if (!full_name || !email || !phone) {
+      return res
+        .status(400)
+        .json({ error: "Full name, email, and phone are required" });
+    }
 
     const existingEmail = await db.findUserByEmail(email);
     if (existingEmail.rows.length > 0) {
@@ -24,11 +30,7 @@ const registerUser = async (req, res) => {
       email,
       phone,
       otp,
-      otpExpiry,
-      address,
-      branch,
-      status,
-      role
+      otpExpiry
     );
 
     await sendOTPEmail(email, otp);
