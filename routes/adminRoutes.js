@@ -66,6 +66,6 @@ router.get("/expences/:id", adminController.getExpenseById);
 router.get("/organization", adminController.getOrganizationSettings);
 router.put("/organization", adminController.updateOrganizationSettings);
 
-router.get("/reports/expense-reports/:type", adminController.getExpenseReport);
+router.get("/expence-reports/:type", adminController.getExpenseReport);
 
 module.exports = router;
