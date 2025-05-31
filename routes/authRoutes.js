@@ -7,5 +7,6 @@ router.post("/request-otp", authController.requestOTP);
 router.post("/set-password", authController.verifyAndSetPassword);
 router.post("/login", authController.loginUser);
 router.post("/logout", authController.logoutUser);
+router.get("/captcha", generateCaptcha);
 
 module.exports = router;
