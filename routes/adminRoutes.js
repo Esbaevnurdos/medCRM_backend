@@ -66,4 +66,16 @@ router.get("/expences/:id", adminController.getExpenseById);
 router.get("/organization", adminController.getOrganizationSettings);
 router.put("/organization", adminController.updateOrganizationSettings);
 
+router.get("/expense-reports/daily", reportController.getDailyExpenseReport);
+router.get("/expense-reports/weekly", reportController.getWeeklyExpenseReport);
+router.get(
+  "/expense-reports/monthly",
+  reportController.getMonthlyExpenseReport
+);
+router.get("/expense-reports/yearly", reportController.getYearlyExpenseReport);
+router.get(
+  "/expense-reports/custom-range",
+  reportController.getCustomRangeReport
+);
+
 module.exports = router;
