@@ -8,16 +8,7 @@ const doctorRoutes = require("./routes/doctorRoutes");
 const app = express();
 
 // ✅ Dynamic CORS setup to allow any origin with credentials
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like curl or mobile apps)
-      if (!origin) return callback(null, true);
-      return callback(null, true); // ⚠️ In production, validate origin here
-    },
-    credentials: true,
-  })
-);
+app.use(cors({ origin: "*", credentials: true }));
 
 app.use(express.json());
 
