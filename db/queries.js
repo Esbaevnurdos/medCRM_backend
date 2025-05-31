@@ -9,18 +9,13 @@ const findUserByPhoneNumber = async (phone) => {
 };
 
 const createUser = async (full_name, email, phone, otp, otpExpiry) => {
-  try {
-    return await db.query(
-      `INSERT INTO users 
-        (full_name, email, phone, password, otp_code, otp_expiry, is_verified, address, branch, status, role)
-       VALUES ($1, $2, $3, NULL, $4, $5, false, NULL, NULL, NULL, NULL)
-       RETURNING id, full_name, email, phone`,
-      [full_name, email, phone, otp, otpExpiry]
-    );
-  } catch (error) {
-    console.error("Error during user creation:", error);
-    throw new Error("Failed to create user");
-  }
+  return await db.query(
+    `INSERT INTO users 
+      (full_name, email, phone, password, otp_code, otp_expiry, is_verified, address, branch, status, role)
+     VALUES ($1, $2, $3, NULL, $4, $5, false, NULL, NULL, NULL, NULL)
+     RETURNING id, full_name, email, phone`,
+    [full_name, email, phone, otp, otpExpiry]
+  );
 };
 
 const findUserByEmailAndOTP = async (email, otp) => {
