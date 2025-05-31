@@ -930,6 +930,73 @@ const updateOrganizationSettings = async (req, res) => {
   }
 };
 
+const getExpenseReport = async (req, res) => {
+  const { type, start_date, end_date } = req.query;
+
+  let groupBy;
+  let dateFilter = "";
+  let values = [];
+
+  switch (type) {
+    case "daily":
+      groupBy = `TO_CHAR(created_at, 'YYYY-MM-DD')`;
+      break;
+    case "weekly":
+      groupBy = `DATE_TRUNC('week', created_at)`;
+      break;
+    case "monthly":
+      groupBy = `TO_CHAR(created_at, 'YYYY-MM')`;
+      break;
+    case "yearly":
+      groupBy = `TO_CHAR(created_at, 'YYYY')`;
+      break;
+    case "custom-range":
+      if (!start_date || !end_date) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Missing start_date or end_date" });
+      }
+      groupBy = `TO_CHAR(created_at, 'YYYY-MM-DD')`;
+      dateFilter = `WHERE created_at BETWEEN $1 AND $2`;
+      values = [start_date, end_date];
+      break;
+    default:
+      return res.status(400).json({ success: false, message: "Invalid type" });
+  }
+
+  const query = `
+    SELECT
+      ${groupBy} AS created_at,
+      SUM(amount) AS totalExpenses,
+      JSON_OBJECT_AGG(category, sum_per_cat) AS categoriesSummary
+    FROM (
+      SELECT
+        ${groupBy} AS created_at,
+        category,
+        SUM(amount) AS sum_per_cat
+      FROM expenses
+      ${dateFilter}
+      GROUP BY ${groupBy}, category
+    ) sub
+    GROUP BY created_at
+    ORDER BY created_at DESC
+  `;
+
+  try {
+    const result = await db.query(query, values);
+    const data = result.rows.map((row, i) => ({
+      id: `R${i + 1}`,
+      created_at: row.created_at,
+      totalExpenses: parseFloat(row.totalexpenses),
+      categoriesSummary: row.categoriessummary,
+    }));
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error generating report:", error.message);
+    res.status(500).json({ success: false, message: "Failed to fetch report" });
+  }
+};
+
 module.exports = {
   addUserController,
   deleteUserController,
@@ -983,4 +1050,5 @@ module.exports = {
   getExpenseCategoryById,
   getOrganizationSettings,
   updateOrganizationSettings,
+  getExpenseReport,
 };
