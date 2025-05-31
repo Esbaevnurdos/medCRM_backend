@@ -2,29 +2,36 @@ const db = require("../db/queries");
 const bcrypt = require("bcryptjs");
 const sendOTPEmail = require("../utils/emailService");
 
+const db = require("../db/queries");
+const sendOTPEmail = require("../utils/emailService");
+
 const registerUser = async (req, res) => {
   try {
-    const { fullname, email, phoneNumber } = req.body;
+    const { full_name, email, phone, address, branch, status, role } = req.body;
 
     const existingEmail = await db.findUserByEmail(email);
     if (existingEmail.rows.length > 0) {
       return res.status(400).json({ error: "Email already in use" });
     }
 
-    const existingPhoneNumber = await db.findUserByPhoneNumber(phoneNumber);
-    if (existingPhoneNumber.rows.length > 0) {
+    const existingPhone = await db.findUserByPhone(phone);
+    if (existingPhone.rows.length > 0) {
       return res.status(400).json({ error: "Phone number already in use" });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60000);
+    const otpExpiry = new Date(Date.now() + 10 * 60000); // 10 minutes
 
     const newUser = await db.createUser(
-      fullname,
+      full_name,
       email,
-      phoneNumber,
+      phone,
       otp,
-      otpExpiry
+      otpExpiry,
+      address,
+      branch,
+      status,
+      role
     );
 
     await sendOTPEmail(email, otp);
@@ -35,9 +42,9 @@ const registerUser = async (req, res) => {
       otp: otp,
       data: {
         id: newUser.rows[0].id,
-        fullname: newUser.rows[0].fullname,
+        full_name: newUser.rows[0].full_name,
         email: newUser.rows[0].email,
-        phoneNumber: newUser.rows[0].phone_number,
+        phone: newUser.rows[0].phone,
       },
     });
   } catch (error) {

@@ -1,30 +1,40 @@
 const db = require("./db");
 
+const db = require("./db");
+
 const findUserByEmail = async (email) => {
   return await db.query("SELECT * FROM users WHERE email = $1", [email]);
 };
 
-const findUserByPhoneNumber = async (phoneNumber) => {
-  return await db.query("SELECT * FROM users WHERE phone_number = $1", [
-    phoneNumber,
-  ]);
+const findUserByPhone = async (phone) => {
+  return await db.query("SELECT * FROM users WHERE phone = $1", [phone]);
 };
 
-const createUser = async (fullname, email, phoneNumber, otp, otpExpiry) => {
+const createUser = async (
+  full_name,
+  email,
+  phone,
+  otp,
+  otpExpiry,
+  address,
+  branch,
+  status,
+  role
+) => {
   try {
-    const hashedPassword = null;
-
     return await db.query(
-      `INSERT INTO users (fullname, email, phone_number, password, otp_code, otp_expiry, is_verified) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) 
-       RETURNING id, fullname, email, phone_number`,
-      [fullname, email, phoneNumber, hashedPassword, otp, otpExpiry, false]
+      `INSERT INTO users 
+        (full_name, email, phone, password, otp_code, otp_expiry, is_verified, address, branch, status, role)
+       VALUES ($1, $2, $3, NULL, $4, $5, false, $6, $7, $8, $9)
+       RETURNING id, full_name, email, phone`,
+      [full_name, email, phone, otp, otpExpiry, address, branch, status, role]
     );
   } catch (error) {
     console.error("Error during user creation:", error);
     throw new Error("Failed to create user");
   }
 };
+
 const findUserByEmailAndOTP = async (email, otp) => {
   return await db.query(
     `SELECT * FROM users WHERE email=$1 AND otp_code=$2 AND otp_expiry > NOW()`,
@@ -42,9 +52,9 @@ const updateUserPassword = async (email, hashedPassword) => {
 const updateUserOTP = async (email, otp, otpExpiry) => {
   try {
     return await db.query(
-      `INSERT INTO users (email, otp_code, otp_expiry) 
-       VALUES ($1, $2, $3) 
-       ON CONFLICT (email) 
+      `INSERT INTO users (email, otp_code, otp_expiry)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (email)
        DO UPDATE SET otp_code = $2, otp_expiry = $3`,
       [email, otp, otpExpiry]
     );
