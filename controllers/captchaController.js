@@ -2,7 +2,7 @@ const svgCaptcha = require("svg-captcha");
 const { v4: uuidv4 } = require("uuid");
 
 // Assuming you have a Redis client configured and exported, e.g. from ../config/redisClient.js
-const redisClient = require("../config/redisClient");
+const redisClient = require("../utils/redisClient");
 
 // Generate CAPTCHA and save to Redis
 const generateCaptcha = async (req, res) => {
