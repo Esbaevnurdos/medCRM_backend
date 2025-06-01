@@ -851,6 +851,10 @@ const deleteExpenseCategory = async (id) => {
   return result.rows[0];
 };
 
+const getExpenseReport = async (query, values) => {
+  return db.query(query, values);
+};
+
 // Get organization settings
 const getOrganizationSettings = async () => {
   const query = `SELECT * FROM organization WHERE id = 1;`;
@@ -958,4 +962,5 @@ module.exports = {
   getExpenseCategoryById,
   getOrganizationSettings,
   updateOrganizationSettings,
+  getExpenseReport,
 };
