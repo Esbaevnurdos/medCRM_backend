@@ -975,22 +975,22 @@ const getExpenseReport = async (req, res) => {
 
   // Construct query using dynamic grouping
   const query = `
+  SELECT
+    group_date,
+    SUM(category_sum)::numeric AS total_expenses,
+    JSON_OBJECT_AGG(category, category_sum) AS categories_summary
+  FROM (
     SELECT
       ${groupBy} AS group_date,
-      SUM(amount)::numeric AS total_expenses,
-      JSON_OBJECT_AGG(category, category_sum) AS categories_summary
-    FROM (
-      SELECT
-        ${groupBy} AS group_date,
-        category,
-        SUM(amount)::numeric AS category_sum
-      FROM expenses
-      ${dateFilter}
-      GROUP BY group_date, category
-    ) AS sub
-    GROUP BY group_date
-    ORDER BY group_date DESC;
-  `;
+      category,
+      SUM(amount)::numeric AS category_sum
+    FROM expenses
+    ${dateFilter}
+    GROUP BY ${groupBy}, category
+  ) AS sub
+  GROUP BY group_date
+  ORDER BY group_date DESC;
+`;
 
   try {
     const result = await db.getExpenseReport(query, values);
