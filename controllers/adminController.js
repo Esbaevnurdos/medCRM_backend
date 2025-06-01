@@ -932,12 +932,13 @@ const updateOrganizationSettings = async (req, res) => {
 
 const getExpenseReport = async (req, res) => {
   const { start_date, end_date } = req.query;
-  const { type } = req.params; // ✅ fix here
+  const { type } = req.params;
 
-  let groupBy,
-    dateFilter = "",
-    values = [];
+  let groupBy;
+  let dateFilter = "";
+  let values = [];
 
+  // Determine grouping format and optional date filtering
   switch (type) {
     case "daily":
       groupBy = "TO_CHAR(created_at, 'YYYY-MM-DD')";
@@ -946,7 +947,7 @@ const getExpenseReport = async (req, res) => {
       groupBy = "TO_CHAR(DATE_TRUNC('week', created_at), 'YYYY-MM-DD')";
       break;
     case "monthly":
-      groupBy = "TO_CHAR(created_at, 'YYYY-MMssx')";
+      groupBy = "TO_CHAR(created_at, 'YYYY-MM')";
       break;
     case "yearly":
       groupBy = "TO_CHAR(created_at, 'YYYY')";
@@ -965,33 +966,42 @@ const getExpenseReport = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid type" });
   }
 
+  // Optional: Apply date filter to other types if query provided
+  if (type !== "custom-range" && start_date && end_date) {
+    dateFilter = "WHERE created_at BETWEEN $1 AND $2";
+    values = [start_date, end_date];
+  }
+
+  // Construct query using dynamic grouping
   const query = `
     SELECT
-      ${groupBy} AS created_at,
-      SUM(amount)::numeric AS totalExpenses,
-      JSON_OBJECT_AGG(category, sum_per_cat) AS categoriesSummary
+      ${groupBy} AS group_date,
+      SUM(amount)::numeric AS total_expenses,
+      JSON_OBJECT_AGG(category, category_sum) AS categories_summary
     FROM (
       SELECT
         ${groupBy} AS group_date,
         category,
-        SUM(amount)::numeric AS sum_per_cat
+        SUM(amount)::numeric AS category_sum
       FROM expenses
       ${dateFilter}
       GROUP BY group_date, category
     ) AS sub
-    GROUP BY created_at
-    ORDER BY created_at DESC;
+    GROUP BY group_date
+    ORDER BY group_date DESC;
   `;
 
   try {
     const result = await db.query(query, values);
+
     const data = result.rows.map((row, i) => ({
       id: `R${i + 1}`,
-      created_at: row.created_at,
-      totalExpenses: parseFloat(row.totalexpenses),
-      categoriesSummary: row.categoriessummary,
+      created_at: row.group_date,
+      totalExpenses: parseFloat(row.total_expenses),
+      categoriesSummary: row.categories_summary,
     }));
-    res.status(200).json(data);
+
+    res.status(200).json({ success: true, data });
   } catch (error) {
     console.error("Error generating report:", error.message);
     res.status(500).json({ success: false, message: "Failed to fetch report" });
