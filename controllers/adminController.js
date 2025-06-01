@@ -1015,7 +1015,26 @@ const getExpenseReport = async (req, res) => {
 
 const createCashboxTransaction = async (req, res) => {
   try {
-    const transactionId = await queries.createTransaction(req.body);
+    let { service_ids, ...transactionData } = req.body;
+
+    // Normalize to an array if a single number is passed
+    if (!Array.isArray(service_ids)) {
+      service_ids = [service_ids];
+    }
+
+    // Optional: validate it's not empty
+    if (service_ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one service_id is required",
+      });
+    }
+
+    const transactionId = await db.createTransaction({
+      ...transactionData,
+      service_ids,
+    });
+
     res.status(201).json({ success: true, transaction_id: transactionId });
   } catch (error) {
     console.error("Error creating cashbox transaction:", error.message);
@@ -1027,7 +1046,7 @@ const createCashboxTransaction = async (req, res) => {
 
 const getCashboxTransactions = async (req, res) => {
   try {
-    const transactions = await db.getAllTransactions();
+    const transactions = await db.getTransactions();
     res.status(200).json({ success: true, data: transactions });
   } catch (error) {
     console.error("Error fetching cashbox transactions:", error.message);
@@ -1070,7 +1089,7 @@ const updateCashboxTransaction = async (req, res) => {
 const deleteCashboxTransactionById = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    await db.deleteTransactionByIds([id]);
+    await db.deleteTransaction([id]);
     res.status(200).json({ success: true });
   } catch (error) {
     console.error("Error deleting transaction:", error.message);
