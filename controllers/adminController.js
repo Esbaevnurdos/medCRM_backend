@@ -946,7 +946,7 @@ const getExpenseReport = async (req, res) => {
       groupBy = "TO_CHAR(DATE_TRUNC('week', created_at), 'YYYY-MM-DD')";
       break;
     case "monthly":
-      groupBy = "TO_CHAR(created_at, 'YYYY-MM')";
+      groupBy = "TO_CHAR(created_at, 'YYYY-MMssx')";
       break;
     case "yearly":
       groupBy = "TO_CHAR(created_at, 'YYYY')";

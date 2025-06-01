@@ -36,23 +36,27 @@ const generateCaptcha = async (req, res) => {
   }
 };
 
-// Verify CAPTCHA text for a given captchaId
-const verifyCaptcha = async (captchaId, captchaText) => {
-  if (!captchaId || !captchaText) return false;
+const verifyCaptcha = async (req, res) => {
+  const { captchaId, captchaText } = req.body;
 
-  // Fetch captcha text from Redis
-  const savedCaptcha = await redisClient.get(`captcha:${captchaId}`);
-
-  if (!savedCaptcha) return false;
-
-  // Case-insensitive compare
-  if (savedCaptcha.toLowerCase() === captchaText.toLowerCase()) {
-    // Optionally delete captcha so it can't be reused
-    await redisClient.del(`captcha:${captchaId}`);
-    return true;
+  if (!captchaId || !captchaText) {
+    return res
+      .status(400)
+      .json({ error: "captchaId and captchaText are required" });
   }
 
-  return false;
+  const savedCaptcha = await redisClient.get(`captcha:${captchaId}`);
+  if (!savedCaptcha) {
+    return res.status(400).json({ error: "Captcha expired or invalid" });
+  }
+
+  if (savedCaptcha.toLowerCase() !== captchaText.toLowerCase()) {
+    return res.status(400).json({ error: "Captcha text does not match" });
+  }
+
+  await redisClient.del(`captcha:${captchaId}`);
+
+  res.json({ success: true, message: "Captcha verified" });
 };
 
 module.exports = {

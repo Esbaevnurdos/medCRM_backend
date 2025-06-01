@@ -5,28 +5,14 @@ const redisClient = require("../utils/redisClient"); // your Redis client
 
 const registerUser = async (req, res) => {
   try {
-    const { full_name, email, phone, captchaId, captchaText } = req.body;
+    const { full_name, email, phone } = req.body;
 
-    if (!full_name || !email || !phone || !captchaId || !captchaText) {
+    if (!full_name || !email || !phone) {
       return res.status(400).json({
-        error:
-          "Full name, email, phone, captchaId, and captchaText are required",
+        error: "Full name, email, phone",
       });
     }
 
-    // Verify CAPTCHA
-    const savedCaptcha = await redisClient.get(`captcha:${captchaId}`);
-    if (!savedCaptcha) {
-      return res.status(400).json({ error: "Captcha expired or invalid" });
-    }
-    if (savedCaptcha.toLowerCase() !== captchaText.toLowerCase()) {
-      return res.status(400).json({ error: "Captcha text does not match" });
-    }
-
-    // Remove used captcha from Redis
-    await redisClient.del(`captcha:${captchaId}`);
-
-    // Existing user checks
     const existingEmail = await db.findUserByEmail(email);
     if (existingEmail.rows.length > 0) {
       return res.status(400).json({ error: "Email already in use" });
@@ -51,6 +37,7 @@ const registerUser = async (req, res) => {
     );
 
     await sendOTPEmail(email, otp);
+    console.log("otp is", otp);
 
     res.status(201).json({
       success: true,
