@@ -97,10 +97,12 @@ router.get(
 
 router.get("/appointments-report", adminController.getAllReportAppointments);
 
-router.post(
-  "/upload-photo",
-  upload.single("image"),
-  adminController.updateOrganizationSettings
+router.put(
+  "/update-logo",
+  upload.single("logo"),
+  adminController.updateOrganizationLogo
 );
+
+router.put("/update-profile", adminController.updateOrganizationProfile);
 
 module.exports = router;
