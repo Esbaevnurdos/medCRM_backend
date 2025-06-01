@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
+// const multer = require("multer");
 const adminController = require("../controllers/adminController");
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+// const storage = multer.memoryStorage();
+// const upload = multer({ storage });
 
 router.post("/staff", adminController.addUserController);
 router.delete("/staff/:id", adminController.deleteUserController);
@@ -73,7 +73,7 @@ router.put("/cashbox/:id", adminController.updateCashboxTransaction);
 router.delete("/cashbox/:id", adminController.deleteCashboxTransactionById);
 
 router.get("/organization", adminController.getOrganizationSettings);
-router.put("/organization", adminController.updateOrganizationSettings);
+// router.put("/organization", adminController.updateOrganizationSettings);
 
 router.get("/expenses_report/:type", adminController.getExpenseReportByPeriod);
 router.get(
