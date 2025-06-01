@@ -73,20 +73,20 @@ router.get("/organization", adminController.getOrganizationSettings);
 router.put("/organization", adminController.updateOrganizationSettings);
 
 router.get("/expenses_report/:type", adminController.getExpenseReportByPeriod);
-
 router.get(
   "/expenses_report/:start_date/:end_date",
   adminController.getExpenseReportByDateRange
 );
+router.get("/cashbox-reports/:type", adminController.getCashboxReportByPeriod);
 router.get(
-  "/cashbox-reports/:type",
-  adminController.getCashboxReportController
+  "/cashbox-reports-range/:start_date/:end_date",
+  adminController.getCashboxReportByDateRange
 );
+
 router.get(
   "/appointments-report/:period",
   adminController.getAppointmentsReportByPeriod
 );
-
 router.get(
   "/appointments-report/:start_date/:end_date",
   adminController.getAppointmentsReportByDateRange

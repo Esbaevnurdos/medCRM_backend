@@ -1197,7 +1197,7 @@ const deleteCashboxTransactionById = async (req, res) => {
   }
 };
 
-const getCashboxReportController = async (req, res) => {
+const getCashboxReportByPeriod = async (req, res) => {
   try {
     let { start_date, end_date } = req.query;
     const period = req.params.type.toLowerCase();
@@ -1218,7 +1218,6 @@ const getCashboxReportController = async (req, res) => {
           .toISOString()
           .slice(0, 10) + " 00:00:00";
     } else {
-      // Если даты пришли с фронта, то можно дописать аналогичное время
       if (start_date.length === 10) start_date += " 00:00:00";
       if (end_date.length === 10) end_date += " 23:59:59";
     }
@@ -1227,6 +1226,30 @@ const getCashboxReportController = async (req, res) => {
     res.status(200).json({ success: true, data: report });
   } catch (error) {
     console.error("Error fetching cashbox report:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to generate report" });
+  }
+};
+
+const getCashboxReportByDateRange = async (req, res) => {
+  const { start_date, end_date } = req.params;
+
+  if (!start_date || !end_date) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing date range" });
+  }
+
+  try {
+    const report = await db.getCashboxReport(
+      start_date + " 00:00:00",
+      end_date + " 23:59:59",
+      "daily"
+    );
+    res.status(200).json({ success: true, data: report });
+  } catch (error) {
+    console.error("Error fetching cashbox range report:", error.message);
     res
       .status(500)
       .json({ success: false, message: "Failed to generate report" });
@@ -1296,5 +1319,6 @@ module.exports = {
   deleteCashboxTransactionById,
   getCashboxTransactionById,
   getCashboxTransactions,
-  getCashboxReportController,
+  getCashboxReportByPeriod,
+  getCashboxReportByDateRange,
 };
