@@ -1070,7 +1070,7 @@ const updateCashboxTransaction = async (req, res) => {
 const deleteCashboxTransaction = async (req, res) => {
   try {
     const ids = Array.isArray(req.body.id) ? req.body.id : [req.body.id];
-    await db.deleteTransactionByIds(ids);
+    await db.deleteTransaction(ids);
     res.status(200).json({ success: true });
   } catch (error) {
     console.error("Error deleting cashbox transaction(s):", error.message);
