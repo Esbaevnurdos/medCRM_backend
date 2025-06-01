@@ -1008,6 +1008,49 @@ const updateOrganizationSettings = async (req, res) => {
   }
 };
 
+const uploadUserPhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No image file provided" });
+    }
+
+    // Convert buffer to base64 string
+    const base64Image = req.file.buffer.toString("base64");
+
+    // Prepare form data for ImgBB
+    const formData = new URLSearchParams();
+    formData.append("key", IMGBB_API_KEY);
+    formData.append("image", base64Image);
+
+    // Send POST request to ImgBB
+    const response = await axios.post(
+      "https://api.imgbb.com/1/upload",
+      formData.toString(),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    // Extract image URL from response
+    const imageUrl = response.data.data.url;
+
+    // You can save imageUrl to your database here if needed
+
+    res.status(200).json({ success: true, imageUrl });
+  } catch (error) {
+    console.error("ImgBB upload error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Image upload failed",
+      error: error.message,
+    });
+  }
+};
+
 const getExpenseReportByPeriod = async (req, res) => {
   const { type } = req.params;
   const { start_date, end_date } = req.query;
@@ -1344,4 +1387,5 @@ module.exports = {
   getCashboxTransactions,
   getCashboxReportByPeriod,
   getCashboxReportByDateRange,
+  uploadUserPhoto,
 };
