@@ -984,8 +984,6 @@ const updateOrganization = async (req, res) => {
   }
 };
 
-const axios = require("axios");
-
 const IMGBB_API_KEY = "98b825690cc3e1cca2484d46d23b65ef"; // Replace this with your real key
 
 const updateOrganizationLogo = async (req, res) => {
