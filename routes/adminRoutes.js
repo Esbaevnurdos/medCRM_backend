@@ -1,10 +1,10 @@
 const express = require("express");
+const router = express.Router();
 const multer = require("multer");
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 const adminController = require("../controllers/adminController");
 
-const router = express.Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 router.post("/staff", adminController.addUserController);
 router.delete("/staff/:id", adminController.deleteUserController);
@@ -97,12 +97,11 @@ router.get(
 
 router.get("/appointments-report", adminController.getAllReportAppointments);
 
+router.put("/update-profile", adminController.updateOrganizationProfile);
 router.put(
   "/update-logo",
   upload.single("logo"),
   adminController.updateOrganizationLogo
 );
-
-router.put("/update-profile", adminController.updateOrganizationProfile);
 
 module.exports = router;
