@@ -1129,29 +1129,27 @@ const updateOrganizationSettings = async ({
   address,
   director,
   description,
-  logo_url,
+  logo_url, // include this
 }) => {
   const query = `
     UPDATE organization
-    SET name = $1,
-        phone = $2,
-        bin = $3,
-        address = $4,
-        director = $5,
-        description = $6,
-        logo_url = COALESCE($7, logo_url)
+    SET name = $1, phone = $2, bin = $3, address = $4,
+        director = $5, description = $6, logo_url = $7
     WHERE id = 1
     RETURNING *;
   `;
-  const values = [name, phone, bin, address, director, description, logo_url];
 
-  try {
-    const result = await db.query(query, values);
-    return result.rows[0];
-  } catch (error) {
-    console.error("DB update failed:", error.message);
-    throw error;
-  }
+  const result = await db.query(query, [
+    name,
+    phone,
+    bin,
+    address,
+    director,
+    description,
+    logo_url, // include this
+  ]);
+
+  return result.rows[0];
 };
 
 module.exports = {
