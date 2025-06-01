@@ -962,38 +962,39 @@ const deleteTransaction = async (id) => {
 };
 
 const getCashboxReport = async (start_date, end_date, period) => {
-  let groupByExpr;
-
+  let groupBy;
   switch (period) {
+    case "daily":
+      groupBy = "DATE(created_at)";
+      break;
     case "weekly":
-      groupByExpr = "TO_CHAR(DATE_TRUNC('week', created_at), 'IYYY-IW')";
+      groupBy = "DATE_TRUNC('week', created_at)";
       break;
     case "monthly":
-      groupByExpr = "TO_CHAR(created_at, 'YYYY-MM')";
+      groupBy = "DATE_TRUNC('month', created_at)";
       break;
     case "yearly":
-      groupByExpr = "TO_CHAR(created_at, 'YYYY')";
+      groupBy = "DATE_TRUNC('year', created_at)";
       break;
-    case "daily":
     default:
-      groupByExpr = "TO_CHAR(created_at, 'YYYY-MM-DD')";
+      throw new Error("Invalid period");
   }
 
   const query = `
     SELECT
-      COUNT(*) AS total_transactions,
-      SUM(amount)::INT AS total_amount,
-      payment_method,
-      ${groupByExpr} AS period
+      ${groupBy} AS period,
+      SUM(amount) AS total_amount,
+      COUNT(*) AS transaction_count
     FROM transactions
     WHERE created_at BETWEEN $1 AND $2
-    GROUP BY payment_method, period
-    ORDER BY period DESC;
+    GROUP BY period
+    ORDER BY period;
   `;
 
   const result = await db.query(query, [start_date, end_date]);
   return result.rows;
 };
+
 // Get organization settings
 const getOrganizationSettings = async () => {
   const query = `SELECT * FROM organization WHERE id = 1;`;
