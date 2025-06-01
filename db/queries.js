@@ -647,6 +647,21 @@ const addAppointment = async (
   }
 };
 
+const getAppointmentsReport = async (start_date, end_date) => {
+  const query = `
+    SELECT
+      service,
+      DATE(appointment_date_time) AS date,
+      COUNT(*) AS visit_count
+    FROM appointments
+    WHERE appointment_date_time BETWEEN $1 AND $2
+    GROUP BY service, date
+    ORDER BY date DESC;
+  `;
+  const result = await db.query(query, [start_date, end_date]);
+  return result.rows;
+};
+
 const getAllAppointments = async () => {
   const query = `
     SELECT a.*, 
@@ -1132,4 +1147,5 @@ module.exports = {
   updateTransaction,
   deleteTransaction,
   getCashboxReport,
+  getAppointmentsReport,
 };

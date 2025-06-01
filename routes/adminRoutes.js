@@ -77,5 +77,9 @@ router.get(
   "/cashbox-reports/:type",
   adminController.getCashboxReportController
 );
+router.get(
+  "/appointments-report",
+  adminController.getAppointmentsReportController
+);
 
 module.exports = router;

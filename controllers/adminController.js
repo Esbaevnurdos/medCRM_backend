@@ -659,6 +659,25 @@ const deleteAppointment = async (req, res) => {
   }
 };
 
+const getAppointmentsReportController = async (req, res) => {
+  let { start_date, end_date } = req.query;
+
+  if (!start_date || !end_date) {
+    end_date = new Date().toISOString().slice(0, 10);
+    start_date = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+  }
+
+  try {
+    const report = await db.getAppointmentsReport(start_date, end_date);
+    res.status(200).json({ success: true, data: report });
+  } catch (error) {
+    console.error("Error generating appointment report:", error.message);
+    res.status(500).json({ success: false, message: "Failed to fetch report" });
+  }
+};
+
 const addService = async (req, res) => {
   const { title, description, price, isAvailable = true } = req.body;
 
@@ -1168,6 +1187,7 @@ module.exports = {
   addAppointment,
   updateAppointment,
   deleteAppointment,
+  getAppointmentsReportController,
   getAppointmentById,
   getAllAppointments,
   addService,
