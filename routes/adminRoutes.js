@@ -78,8 +78,13 @@ router.get(
   adminController.getCashboxReportController
 );
 router.get(
-  "/appointments-report",
-  adminController.getAppointmentsReportController
+  "/appointments-report/:period(daily|weekly|monthly|yearly)",
+  adminController.reportAppointmentsByPeriod
+);
+
+router.get(
+  "/appointments-report/:start_date/:end_date",
+  adminController.reportAppointmentsByDateRange
 );
 
 module.exports = router;

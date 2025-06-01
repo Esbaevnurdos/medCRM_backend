@@ -659,22 +659,34 @@ const deleteAppointment = async (req, res) => {
   }
 };
 
-const getAppointmentsReportController = async (req, res) => {
-  let { start_date, end_date } = req.query;
-
-  if (!start_date || !end_date) {
-    end_date = new Date().toISOString().slice(0, 10);
-    start_date = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10);
-  }
+const reportAppointmentsByPeriod = async (req, res) => {
+  const { period } = req.params;
 
   try {
-    const report = await db.getAppointmentsReport(start_date, end_date);
-    res.status(200).json({ success: true, data: report });
-  } catch (error) {
-    console.error("Error generating appointment report:", error.message);
-    res.status(500).json({ success: false, message: "Failed to fetch report" });
+    const data = await db.getAppointmentsReportByPeriod(period);
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error("Period report error:", err.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Error generating report" });
+  }
+};
+
+const reportAppointmentsByDateRange = async (req, res) => {
+  const { start_date, end_date } = req.params;
+
+  try {
+    const data = await db.getAppointmentsReportByDateRange(
+      start_date,
+      end_date
+    );
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error("Date range report error:", err.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Error generating report" });
   }
 };
 
@@ -1187,7 +1199,8 @@ module.exports = {
   addAppointment,
   updateAppointment,
   deleteAppointment,
-  getAppointmentsReportController,
+  reportAppointmentsByDateRange,
+  reportAppointmentsByPeriod,
   getAppointmentById,
   getAllAppointments,
   addService,

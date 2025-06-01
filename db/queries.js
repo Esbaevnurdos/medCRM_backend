@@ -647,16 +647,68 @@ const addAppointment = async (
   }
 };
 
-const getAppointmentsReport = async (start_date, end_date) => {
+const getAppointmentsReportByPeriod = async (period) => {
+  let groupByDate;
+  switch (period) {
+    case "daily":
+      groupByDate = "DATE(appointment_date_time)";
+      break;
+    case "weekly":
+      groupByDate = "DATE_TRUNC('week', appointment_date_time)";
+      break;
+    case "monthly":
+      groupByDate = "DATE_TRUNC('month', appointment_date_time)";
+      break;
+    case "yearly":
+      groupByDate = "DATE_TRUNC('year', appointment_date_time)";
+      break;
+    default:
+      throw new Error("Invalid period");
+  }
+
   const query = `
     SELECT
       service,
-      DATE(appointment_date_time) AS date,
+      ${groupByDate} AS period,
       COUNT(*) AS visit_count
     FROM appointments
+    GROUP BY service, period
+    ORDER BY period DESC;
+  `;
+
+  const result = await db.query(query);
+
+  // Group by service
+  const grouped = {};
+  for (const row of result.rows) {
+    if (!grouped[row.service]) {
+      grouped[row.service] = {
+        service: row.service,
+        report: [],
+      };
+    }
+
+    grouped[row.service].report.push({
+      period: row.period,
+      visit_count: row.visit_count,
+    });
+  }
+
+  return Object.values(grouped);
+};
+
+// Raw report by date range
+const getAppointmentsReportByDateRange = async (start_date, end_date) => {
+  const query = `
+    SELECT
+      patient_id,
+      specialist_id,
+      service,
+      appointment_date_time,
+      status
+    FROM appointments
     WHERE appointment_date_time BETWEEN $1 AND $2
-    GROUP BY service, date
-    ORDER BY date DESC;
+    ORDER BY appointment_date_time DESC;
   `;
   const result = await db.query(query, [start_date, end_date]);
   return result.rows;
@@ -1147,5 +1199,6 @@ module.exports = {
   updateTransaction,
   deleteTransaction,
   getCashboxReport,
-  getAppointmentsReport,
+  getAppointmentsReportByDateRange,
+  getAppointmentsReportByPeriod,
 };
