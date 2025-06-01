@@ -98,6 +98,12 @@ router.get(
 router.get("/appointments-report", adminController.getAllReportAppointments);
 
 router.put("/update-profile/:id", adminController.updateOrganization);
+router.put(
+  "/update-logo/:id",
+  upload.single("logo"),
+  adminController.updateOrganizationLogo
+);
+
 // router.put(
 //   "/update-logo",
 //   upload.single("logo"),

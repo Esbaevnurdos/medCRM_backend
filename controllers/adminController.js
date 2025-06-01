@@ -984,7 +984,54 @@ const updateOrganization = async (req, res) => {
   }
 };
 
-// const updateOrganizationLogo = async (req, res) => {
+const axios = require("axios");
+
+const IMGBB_API_KEY = "98b825690cc3e1cca2484d46d23b65ef"; // Replace this with your real key
+
+const updateOrganizationLogo = async (req, res) => {
+  const { id } = req.params;
+
+  if (!req.file) {
+    return res.status(400).json({ error: "No logo file uploaded" });
+  }
+
+  try {
+    const base64Image = req.file.buffer.toString("base64");
+
+    // Upload image to ImgBB
+    const response = await axios.post(
+      `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
+      {
+        image: base64Image,
+        name: `logo-${Date.now()}`,
+      }
+    );
+
+    const logoUrl = response.data.data.url;
+
+    const query = `
+      UPDATE organization
+      SET logo = $1
+      WHERE id = $2
+      RETURNING *;
+    `;
+    const result = await db.query(query, [logoUrl, id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    res.status(200).json({
+      message: "Organization logo updated successfully",
+      logo: logoUrl,
+      data: result.rows[0],
+    });
+  } catch (err) {
+    console.error("Logo upload error:", err.message);
+    res.status(500).json({ error: "Failed to upload logo" });
+  }
+};
+
 //   try {
 //     if (!req.file) {
 //       return res.status(400).json({
@@ -1367,4 +1414,5 @@ module.exports = {
   getCashboxTransactions,
   getCashboxReportByPeriod,
   getCashboxReportByDateRange,
+  updateOrganizationLogo,
 };
