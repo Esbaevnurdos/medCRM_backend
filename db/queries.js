@@ -962,19 +962,19 @@ const deleteTransaction = async (id) => {
 };
 
 const getCashboxReport = async (start_date, end_date, period) => {
-  let groupBy;
+  let groupByDate;
   switch (period) {
     case "daily":
-      groupBy = "DATE(created_at)";
+      groupByDate = "DATE(t.created_at)";
       break;
     case "weekly":
-      groupBy = "DATE_TRUNC('week', created_at)";
+      groupByDate = "DATE_TRUNC('week', t.created_at)";
       break;
     case "monthly":
-      groupBy = "DATE_TRUNC('month', created_at)";
+      groupByDate = "DATE_TRUNC('month', t.created_at)";
       break;
     case "yearly":
-      groupBy = "DATE_TRUNC('year', created_at)";
+      groupByDate = "DATE_TRUNC('year', t.created_at)";
       break;
     default:
       throw new Error("Invalid period");
@@ -982,17 +982,40 @@ const getCashboxReport = async (start_date, end_date, period) => {
 
   const query = `
     SELECT
-      ${groupBy} AS period,
-      SUM(amount) AS total_amount,
+      s.id AS service_id,
+      s.title AS service_title,
+      ${groupByDate} AS period,
+      SUM(t.amount) AS total_amount,
       COUNT(*) AS transaction_count
-    FROM transactions
-    WHERE created_at BETWEEN $1 AND $2
-    GROUP BY period
-    ORDER BY period;
+    FROM transactions t
+    JOIN transaction_services ts ON t.id = ts.transaction_id
+    JOIN services s ON ts.service_id = s.id
+    WHERE t.created_at BETWEEN $1 AND $2
+    GROUP BY s.id, s.title, period
+    ORDER BY s.id, period;
   `;
 
   const result = await db.query(query, [start_date, end_date]);
-  return result.rows;
+
+  // Group rows by service_id
+  const grouped = {};
+  for (const row of result.rows) {
+    if (!grouped[row.service_id]) {
+      grouped[row.service_id] = {
+        service_id: row.service_id,
+        service_title: row.service_title,
+        report: [],
+      };
+    }
+
+    grouped[row.service_id].report.push({
+      period: row.period,
+      total_amount: row.total_amount,
+      transaction_count: row.transaction_count,
+    });
+  }
+
+  return Object.values(grouped);
 };
 
 // Get organization settings
