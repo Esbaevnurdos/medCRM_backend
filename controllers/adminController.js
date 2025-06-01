@@ -1103,20 +1103,25 @@ const getCashboxReportController = async (req, res) => {
     let { start_date, end_date } = req.query;
     const period = req.params.type.toLowerCase();
 
-    // Default date range: last 30 days
-    if (!start_date || !end_date) {
-      end_date = new Date().toISOString().slice(0, 10);
-      start_date = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .slice(0, 10);
-    }
-
     if (!["daily", "weekly", "monthly", "yearly"].includes(period)) {
       return res.status(400).json({
         success: false,
         message:
           "Invalid period. Must be one of daily, weekly, monthly, yearly.",
       });
+    }
+
+    if (!start_date || !end_date) {
+      const now = new Date();
+      end_date = now.toISOString().slice(0, 10) + " 23:59:59";
+      start_date =
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10) + " 00:00:00";
+    } else {
+      // Если даты пришли с фронта, то можно дописать аналогичное время
+      if (start_date.length === 10) start_date += " 00:00:00";
+      if (end_date.length === 10) end_date += " 23:59:59";
     }
 
     const report = await db.getCashboxReport(start_date, end_date, period);
