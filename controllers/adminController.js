@@ -1098,6 +1098,36 @@ const deleteCashboxTransactionById = async (req, res) => {
   }
 };
 
+const getCashboxReportController = async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    const { type: period } = req.params;
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({
+        success: false,
+        message: "start_date and end_date are required",
+      });
+    }
+
+    if (!["daily", "weekly", "monthly", "yearly"].includes(period)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid period. Must be one of daily, weekly, monthly, yearly.",
+      });
+    }
+
+    const report = await db.getCashboxReport(start_date, end_date, period);
+    res.status(200).json({ success: true, data: report });
+  } catch (error) {
+    console.error("Error fetching cashbox report:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to generate report" });
+  }
+};
+
 module.exports = {
   addUserController,
   deleteUserController,
@@ -1157,4 +1187,5 @@ module.exports = {
   deleteCashboxTransactionById,
   getCashboxTransactionById,
   getCashboxTransactions,
+  getCashboxReportController,
 };

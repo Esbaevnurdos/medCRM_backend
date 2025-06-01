@@ -73,5 +73,9 @@ router.get("/organization", adminController.getOrganizationSettings);
 router.put("/organization", adminController.updateOrganizationSettings);
 
 router.get("/expence-reports/:type", adminController.getExpenseReport);
+router.get(
+  "/cashbox-reports/:type",
+  adminController.getCashboxReportController
+);
 
 module.exports = router;

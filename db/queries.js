@@ -961,6 +961,39 @@ const deleteTransaction = async (id) => {
   return result.rows[0];
 };
 
+const getCashboxReport = async (start_date, end_date, period) => {
+  let groupByExpr;
+
+  switch (period) {
+    case "weekly":
+      groupByExpr = "TO_CHAR(DATE_TRUNC('week', created_at), 'IYYY-IW')";
+      break;
+    case "monthly":
+      groupByExpr = "TO_CHAR(created_at, 'YYYY-MM')";
+      break;
+    case "yearly":
+      groupByExpr = "TO_CHAR(created_at, 'YYYY')";
+      break;
+    case "daily":
+    default:
+      groupByExpr = "TO_CHAR(created_at, 'YYYY-MM-DD')";
+  }
+
+  const query = `
+    SELECT
+      COUNT(*) AS total_transactions,
+      SUM(amount)::INT AS total_amount,
+      payment_method,
+      ${groupByExpr} AS period
+    FROM transactions
+    WHERE created_at BETWEEN $1 AND $2
+    GROUP BY payment_method, period
+    ORDER BY period DESC;
+  `;
+
+  const result = await db.query(query, [start_date, end_date]);
+  return result.rows;
+};
 // Get organization settings
 const getOrganizationSettings = async () => {
   const query = `SELECT * FROM organization WHERE id = 1;`;
@@ -1074,4 +1107,5 @@ module.exports = {
   getTransactionById,
   updateTransaction,
   deleteTransaction,
+  getCashboxReport,
 };
