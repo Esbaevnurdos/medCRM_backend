@@ -1133,7 +1133,7 @@ const updateOrganization = async (id, data) => {
       bin_iin = $3,
       address = $4,
       director = $5,
-      description = $6,
+      description = $6
     WHERE id = $7
     RETURNING *;
   `;
