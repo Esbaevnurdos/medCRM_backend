@@ -659,36 +659,36 @@ const deleteAppointment = async (req, res) => {
   }
 };
 
-const reportAppointmentsByPeriod = async (req, res) => {
-  const { period } = req.params;
+const reportAppointments = async (req, res) => {
+  const { period, start_date, end_date } = req.query;
 
   try {
-    const data = await db.getAppointmentsReportByPeriod(period);
+    let data;
+
+    if (period) {
+      // Validate period
+      const validPeriods = ["daily", "weekly", "monthly", "yearly"];
+      if (!validPeriods.includes(period.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid period. Must be one of daily, weekly, monthly, yearly.",
+        });
+      }
+      data = await db.getAppointmentsReportByPeriod(period.toLowerCase());
+    } else if (start_date && end_date) {
+      data = await db.getAppointmentsReportByDateRange(start_date, end_date);
+    } else {
+      // No filter - get all appointments
+      data = await db.getAllAppointments();
+    }
+
     res.json({ success: true, data });
   } catch (err) {
-    console.error("Period report error:", err.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Error generating report" });
+    console.error("Appointments report error:", err.message);
+    res.status(500).json({ success: false, message: "Error generating report" });
   }
 };
 
-const reportAppointmentsByDateRange = async (req, res) => {
-  const { start_date, end_date } = req.params;
-
-  try {
-    const data = await db.getAppointmentsReportByDateRange(
-      start_date,
-      end_date
-    );
-    res.json({ success: true, data });
-  } catch (err) {
-    console.error("Date range report error:", err.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Error generating report" });
-  }
-};
 
 const addService = async (req, res) => {
   const { title, description, price, isAvailable = true } = req.body;
