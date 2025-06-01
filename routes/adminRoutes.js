@@ -79,12 +79,14 @@ router.get(
 );
 router.get(
   "/appointments-report/:period",
-  adminController.reportAppointmentsByPeriod
+  adminController.getAppointmentsReportByPeriod
 );
 
 router.get(
   "/appointments-report/:start_date/:end_date",
-  adminController.reportAppointmentsByDateRange
+  adminController.getAppointmentsReportByDateRange
 );
+
+router.get("/appointments-report", adminController.getAllReportAppointments);
 
 module.exports = router;
