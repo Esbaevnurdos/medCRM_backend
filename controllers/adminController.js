@@ -1067,16 +1067,16 @@ const updateCashboxTransaction = async (req, res) => {
   }
 };
 
-const deleteCashboxTransaction = async (req, res) => {
+const deleteCashboxTransactionById = async (req, res) => {
   try {
-    const ids = Array.isArray(req.body.id) ? req.body.id : [req.body.id];
-    await db.deleteTransaction(ids);
+    const id = parseInt(req.params.id);
+    await db.deleteTransactionByIds([id]);
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error("Error deleting cashbox transaction(s):", error.message);
+    console.error("Error deleting transaction:", error.message);
     res
       .status(500)
-      .json({ success: false, message: "Failed to delete transaction(s)" });
+      .json({ success: false, message: "Failed to delete transaction" });
   }
 };
 
@@ -1136,7 +1136,7 @@ module.exports = {
   getExpenseReport,
   createCashboxTransaction,
   updateCashboxTransaction,
-  deleteCashboxTransaction,
+  deleteCashboxTransactionById,
   getCashboxTransactionById,
   getCashboxTransactions,
 };

@@ -67,9 +67,7 @@ router.post("/cashbox", adminController.createCashboxTransaction);
 router.get("/cashbox", adminController.getCashboxTransactions);
 router.get("/cashbox/:id", adminController.getCashboxTransactionById);
 router.put("/cashbox/:id", adminController.updateCashboxTransaction);
-
-// Delete one or multiple transactions
-router.delete("/", cashboxController.deleteCashboxTransaction);
+router.delete("/cashbox/:id", adminController.deleteCashboxTransactionById);
 
 router.get("/organization", adminController.getOrganizationSettings);
 router.put("/organization", adminController.updateOrganizationSettings);
