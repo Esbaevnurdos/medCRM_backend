@@ -1003,8 +1003,12 @@ const getExpenseReport = async (req, res) => {
 
     res.status(200).json({ success: true, data });
   } catch (error) {
-    console.error("Error generating report:", error.message);
-    res.status(500).json({ success: false, message: "Failed to fetch report" });
+    console.error("❌ Report generation failed:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch report",
+      error: error.message, // <- add this temporarily to see what went wrong
+    });
   }
 };
 
