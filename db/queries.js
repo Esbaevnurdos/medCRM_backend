@@ -1134,7 +1134,6 @@ const updateOrganization = async (id, data) => {
       address = $4,
       director = $5,
       description = $6,
-      updated_at = NOW()
     WHERE id = $7
     RETURNING *;
   `;
