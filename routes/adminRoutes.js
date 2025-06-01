@@ -98,10 +98,10 @@ router.get(
 router.get("/appointments-report", adminController.getAllReportAppointments);
 
 router.put("/update-profile", adminController.updateOrganizationProfile);
-router.put(
-  "/update-logo",
-  upload.single("logo"),
-  adminController.updateOrganizationLogo
-);
+// router.put(
+//   "/update-logo",
+//   upload.single("logo"),
+//   adminController.updateOrganizationLogo
+// );
 
 module.exports = router;
