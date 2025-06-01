@@ -78,7 +78,7 @@ router.get(
   adminController.getCashboxReportController
 );
 router.get(
-  "/appointments-report/:period(daily|weekly|monthly|yearly)",
+  "/appointments-report/:period",
   adminController.reportAppointmentsByPeriod
 );
 
