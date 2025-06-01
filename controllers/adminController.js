@@ -671,7 +671,8 @@ const reportAppointments = async (req, res) => {
       if (!validPeriods.includes(period.toLowerCase())) {
         return res.status(400).json({
           success: false,
-          message: "Invalid period. Must be one of daily, weekly, monthly, yearly.",
+          message:
+            "Invalid period. Must be one of daily, weekly, monthly, yearly.",
         });
       }
       data = await db.getAppointmentsReportByPeriod(period.toLowerCase());
@@ -685,10 +686,11 @@ const reportAppointments = async (req, res) => {
     res.json({ success: true, data });
   } catch (err) {
     console.error("Appointments report error:", err.message);
-    res.status(500).json({ success: false, message: "Error generating report" });
+    res
+      .status(500)
+      .json({ success: false, message: "Error generating report" });
   }
 };
-
 
 const addService = async (req, res) => {
   const { title, description, price, isAvailable = true } = req.body;
@@ -1201,6 +1203,7 @@ module.exports = {
   deleteAppointment,
   reportAppointmentsByDateRange,
   reportAppointmentsByPeriod,
+  reportAppointments,
   getAppointmentById,
   getAllAppointments,
   addService,
