@@ -1008,6 +1008,9 @@ const updateOrganizationSettings = async (req, res) => {
   }
 };
 
+const storage = multer.memoryStorage(); // store file in memory for processing
+const upload = multer({ storage });
+
 const uploadUserPhoto = async (req, res) => {
   try {
     if (!req.file) {
