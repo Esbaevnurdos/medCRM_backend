@@ -1013,6 +1013,73 @@ const getExpenseReport = async (req, res) => {
   }
 };
 
+const createCashboxTransaction = async (req, res) => {
+  try {
+    const transactionId = await queries.createTransaction(req.body);
+    res.status(201).json({ success: true, transaction_id: transactionId });
+  } catch (error) {
+    console.error("Error creating cashbox transaction:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to create transaction" });
+  }
+};
+
+const getCashboxTransactions = async (req, res) => {
+  try {
+    const transactions = await db.getAllTransactions();
+    res.status(200).json({ success: true, data: transactions });
+  } catch (error) {
+    console.error("Error fetching cashbox transactions:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch transactions" });
+  }
+};
+
+const getCashboxTransactionById = async (req, res) => {
+  try {
+    const transaction = await db.getTransactionById(req.params.id);
+    res.status(200).json({ success: true, data: transaction });
+  } catch (error) {
+    console.error(
+      `Error fetching cashbox transaction by ID ${req.params.id}:`,
+      error.message
+    );
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch transaction" });
+  }
+};
+
+const updateCashboxTransaction = async (req, res) => {
+  try {
+    await db.updateTransaction({ id: req.params.id, ...req.body });
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error(
+      `Error updating cashbox transaction ${req.params.id}:`,
+      error.message
+    );
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update transaction" });
+  }
+};
+
+const deleteCashboxTransaction = async (req, res) => {
+  try {
+    const ids = Array.isArray(req.body.id) ? req.body.id : [req.body.id];
+    await db.deleteTransactionByIds(ids);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Error deleting cashbox transaction(s):", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete transaction(s)" });
+  }
+};
+
 module.exports = {
   addUserController,
   deleteUserController,
@@ -1067,4 +1134,9 @@ module.exports = {
   getOrganizationSettings,
   updateOrganizationSettings,
   getExpenseReport,
+  createCashboxTransaction,
+  updateCashboxTransaction,
+  deleteCashboxTransaction,
+  getCashboxTransactionById,
+  getCashboxTransactions,
 };

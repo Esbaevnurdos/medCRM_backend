@@ -855,6 +855,128 @@ const getExpenseReport = async (query, values) => {
   return db.query(query, values);
 };
 
+const createTransaction = async ({
+  patient_id,
+  specialist_id,
+  amount,
+  payment_method,
+  comment,
+  service_ids,
+}) => {
+  const client = await db.connect();
+  try {
+    await client.query("BEGIN");
+
+    const insertTransactionQuery = `
+      INSERT INTO transactions (patient_id, specialist_id, amount, payment_method, comment, created_at)
+      VALUES ($1, $2, $3, $4, $5, NOW())
+      RETURNING *;
+    `;
+    const transactionResult = await client.query(insertTransactionQuery, [
+      patient_id,
+      specialist_id,
+      amount,
+      payment_method,
+      comment,
+    ]);
+    const transaction = transactionResult.rows[0];
+
+    const insertServiceLinksQuery = `
+      INSERT INTO transaction_services (transaction_id, service_id) VALUES ${service_ids
+        .map((_, i) => `($1, $${i + 2})`)
+        .join(", ")}
+    `;
+    await client.query(insertServiceLinksQuery, [
+      transaction.id,
+      ...service_ids,
+    ]);
+
+    await client.query("COMMIT");
+    return transaction;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const getTransactions = async () => {
+  const query = `
+    SELECT * FROM transactions ORDER BY created_at DESC;
+  `;
+  const result = await db.query(query);
+  return result.rows;
+};
+
+const getTransactionById = async (id) => {
+  const query = `
+    SELECT
+      t.*,
+      JSON_AGG(
+        JSON_BUILD_OBJECT('id', s.id, 'title', s.title, 'price', s.price)
+      ) AS services
+    FROM transactions t
+    LEFT JOIN transaction_services ts ON t.id = ts.transaction_id
+    LEFT JOIN services s ON ts.service_id = s.id
+    WHERE t.id = $1
+    GROUP BY t.id;
+  `;
+  const result = await db.query(query, [id]);
+  return result.rows[0];
+};
+
+const updateTransaction = async ({
+  id,
+  amount,
+  payment_method,
+  comment,
+  service_ids,
+}) => {
+  const client = await db.connect();
+  try {
+    await client.query("BEGIN");
+
+    const updateTransactionQuery = `
+      UPDATE transactions
+      SET amount = $1, payment_method = $2, comment = $3
+      WHERE id = $4
+      RETURNING *;
+    `;
+    await client.query(updateTransactionQuery, [
+      amount,
+      payment_method,
+      comment,
+      id,
+    ]);
+
+    await client.query(
+      `DELETE FROM transaction_services WHERE transaction_id = $1`,
+      [id]
+    );
+
+    const insertServiceLinksQuery = `
+      INSERT INTO transaction_services (transaction_id, service_id) VALUES ${service_ids
+        .map((_, i) => `($1, $${i + 2})`)
+        .join(", ")}
+    `;
+    await client.query(insertServiceLinksQuery, [id, ...service_ids]);
+
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const deleteTransaction = async (id) => {
+  const query = `DELETE FROM transactions WHERE id = $1 RETURNING *;`;
+  const result = await db.query(query, [id]);
+  return result.rows[0];
+};
+
 // Get organization settings
 const getOrganizationSettings = async () => {
   const query = `SELECT * FROM organization WHERE id = 1;`;
@@ -963,4 +1085,9 @@ module.exports = {
   getOrganizationSettings,
   updateOrganizationSettings,
   getExpenseReport,
+  createTransaction,
+  getTransactions,
+  getTransactionById,
+  updateTransaction,
+  deleteTransaction,
 };
