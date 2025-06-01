@@ -996,12 +996,16 @@ const updateOrganizationLogo = async (req, res) => {
   try {
     const base64Image = req.file.buffer.toString("base64");
 
-    // Upload image to ImgBB
     const response = await axios.post(
       `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
-      {
+      new URLSearchParams({
         image: base64Image,
         name: `logo-${Date.now()}`,
+      }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
       }
     );
 
@@ -1025,7 +1029,7 @@ const updateOrganizationLogo = async (req, res) => {
       data: result.rows[0],
     });
   } catch (err) {
-    console.error("Logo upload error:", err.message);
+    console.error("Logo upload error:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to upload logo" });
   }
 };
