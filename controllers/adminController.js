@@ -985,16 +985,23 @@ const updateOrganizationSettings = async (req, res) => {
   }
 };
 
-const getExpenseReport = async (req, res) => {
-  const { start_date, end_date } = req.query;
+const getExpenseReportByPeriod = async (req, res) => {
   const { type } = req.params;
+  const { start_date, end_date } = req.query;
+
+  const validTypes = ["daily", "weekly", "monthly", "yearly"];
+  if (!validTypes.includes(type.toLowerCase())) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid type. Must be one of daily, weekly, monthly, yearly.",
+    });
+  }
 
   let groupBy;
   let dateFilter = "";
   let values = [];
 
-  // Determine grouping format and optional date filtering
-  switch (type) {
+  switch (type.toLowerCase()) {
     case "daily":
       groupBy = "TO_CHAR(created_at, 'YYYY-MM-DD')";
       break;
@@ -1007,59 +1014,97 @@ const getExpenseReport = async (req, res) => {
     case "yearly":
       groupBy = "TO_CHAR(created_at, 'YYYY')";
       break;
-    case "custom-range":
-      if (!start_date || !end_date) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Missing start_date or end_date" });
-      }
-      groupBy = "TO_CHAR(created_at, 'YYYY-MM-DD')";
-      dateFilter = "WHERE created_at BETWEEN $1 AND $2";
-      values = [start_date, end_date];
-      break;
-    default:
-      return res.status(400).json({ success: false, message: "Invalid type" });
   }
 
-  // Optional: Apply date filter to other types if query provided
-  if (type !== "custom-range" && start_date && end_date) {
+  // Apply optional date range filter if both dates provided
+  if (start_date && end_date) {
     dateFilter = "WHERE created_at BETWEEN $1 AND $2";
     values = [start_date, end_date];
   }
 
-  // Construct query using dynamic grouping
   const query = `
-  SELECT
-    group_date,
-    SUM(category_sum)::numeric AS total_expenses,
-    JSON_OBJECT_AGG(category, category_sum) AS categories_summary
-  FROM (
     SELECT
-      ${groupBy} AS group_date,
-      category,
-      SUM(amount)::numeric AS category_sum
-    FROM expenses
-    ${dateFilter}
-    GROUP BY ${groupBy}, category
-  ) AS sub
-  GROUP BY group_date
-  ORDER BY group_date DESC;
-`;
+      group_date,
+      SUM(category_sum)::numeric AS total_expenses,
+      JSON_OBJECT_AGG(category, category_sum) AS categories_summary
+    FROM (
+      SELECT
+        ${groupBy} AS group_date,
+        category,
+        SUM(amount)::numeric AS category_sum
+      FROM expenses
+      ${dateFilter}
+      GROUP BY ${groupBy}, category
+    ) AS sub
+    GROUP BY group_date
+    ORDER BY group_date DESC;
+  `;
 
   try {
     const result = await db.getExpenseReport(query, values);
-
     const data = result.rows.map((row, i) => ({
       id: `R${i + 1}`,
       created_at: row.group_date,
       totalExpenses: parseFloat(row.total_expenses),
       categoriesSummary: row.categories_summary,
     }));
-
     res.status(200).json({ success: true, data });
   } catch (error) {
     console.error("❌ Report generation failed:", error);
-    return res.status(500).json({
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch report",
+      error: error.message,
+    });
+  }
+};
+
+const getExpenseReportByDateRange = async (req, res) => {
+  const { start_date, end_date } = req.params;
+
+  if (!start_date || !end_date) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing start_date or end_date in URL params",
+    });
+  }
+
+  const query = `
+    SELECT
+      created_at::date AS group_date,
+      category,
+      SUM(amount)::numeric AS category_sum
+    FROM expenses
+    WHERE created_at BETWEEN $1 AND $2
+    GROUP BY group_date, category
+    ORDER BY group_date DESC;
+  `;
+
+  try {
+    const result = await db.getExpenseReport(query, [start_date, end_date]);
+
+    // aggregate by date into your desired structure
+    const grouped = {};
+
+    result.rows.forEach(({ group_date, category, category_sum }) => {
+      if (!grouped[group_date])
+        grouped[group_date] = { categoriesSummary: {}, totalExpenses: 0 };
+      grouped[group_date].categoriesSummary[category] =
+        parseFloat(category_sum);
+      grouped[group_date].totalExpenses += parseFloat(category_sum);
+    });
+
+    const data = Object.entries(grouped).map(([date, obj], i) => ({
+      id: `R${i + 1}`,
+      created_at: date,
+      totalExpenses: obj.totalExpenses,
+      categoriesSummary: obj.categoriesSummary,
+    }));
+
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error("❌ Date range report generation failed:", error);
+    res.status(500).json({
       success: false,
       message: "Failed to fetch report",
       error: error.message,
@@ -1244,7 +1289,8 @@ module.exports = {
   getExpenseCategoryById,
   getOrganizationSettings,
   updateOrganizationSettings,
-  getExpenseReport,
+  getExpenseReportByDateRange,
+  getExpenseReportByPeriod,
   createCashboxTransaction,
   updateCashboxTransaction,
   deleteCashboxTransactionById,

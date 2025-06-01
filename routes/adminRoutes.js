@@ -72,7 +72,12 @@ router.delete("/cashbox/:id", adminController.deleteCashboxTransactionById);
 router.get("/organization", adminController.getOrganizationSettings);
 router.put("/organization", adminController.updateOrganizationSettings);
 
-router.get("/expence-reports/:type", adminController.getExpenseReport);
+router.get("/expenses_report/:type", adminController.getExpenseReportByPeriod);
+
+router.get(
+  "/expenses_report/:start_date/:end_date",
+  adminController.getExpenseReportByDateRange
+);
 router.get(
   "/cashbox-reports/:type",
   adminController.getCashboxReportController
