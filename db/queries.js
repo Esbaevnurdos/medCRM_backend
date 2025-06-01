@@ -1,4 +1,5 @@
 const db = require("./db");
+const axios = require("axios");
 
 const findUserByEmail = async (email) => {
   return await db.query("SELECT * FROM users WHERE email = $1", [email]);
@@ -1121,7 +1122,6 @@ const getOrganizationSettings = async () => {
   }
 };
 
-// Update organization settings
 const updateOrganizationSettings = async ({
   name,
   phone,
@@ -1129,25 +1129,27 @@ const updateOrganizationSettings = async ({
   address,
   director,
   description,
+  logo_url,
 }) => {
   const query = `
     UPDATE organization
-    SET name = $1, phone = $2, bin = $3, address = $4, director = $5, description = $6
+    SET name = $1,
+        phone = $2,
+        bin = $3,
+        address = $4,
+        director = $5,
+        description = $6,
+        logo_url = COALESCE($7, logo_url)
     WHERE id = 1
     RETURNING *;
   `;
+  const values = [name, phone, bin, address, director, description, logo_url];
+
   try {
-    const result = await db.query(query, [
-      name,
-      phone,
-      bin,
-      address,
-      director,
-      description,
-    ]);
+    const result = await db.query(query, values);
     return result.rows[0];
   } catch (error) {
-    console.error("Error updating organization settings:", error.message);
+    console.error("DB update failed:", error.message);
     throw error;
   }
 };

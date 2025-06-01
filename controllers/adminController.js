@@ -964,10 +964,30 @@ const getOrganizationSettings = async (req, res) => {
   }
 };
 
-// PUT /organization
+const IMGBB_API_KEY = "98b825690cc3e1cca2484d46d23b65ef";
+
 const updateOrganizationSettings = async (req, res) => {
-  const { name, phone, bin, address, director, description } = req.body;
+  const { name, phone, bin, address, director, description, base64Image } =
+    req.body;
+
   try {
+    let logoUrl = null;
+
+    // Only upload if base64Image is provided
+    if (base64Image && base64Image.trim() !== "") {
+      const response = await axios.post(
+        "https://api.imgbb.com/1/upload",
+        null,
+        {
+          params: {
+            key: IMGBB_API_KEY,
+            image: base64Image,
+          },
+        }
+      );
+      logoUrl = response.data.data.url;
+    }
+
     const updated = await db.updateOrganizationSettings({
       name,
       phone,
@@ -975,9 +995,12 @@ const updateOrganizationSettings = async (req, res) => {
       address,
       director,
       description,
+      logo_url: logoUrl, // null means don't update
     });
+
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
+    console.error("❌ Error updating org settings:", error.message);
     res.status(500).json({
       success: false,
       message: "Failed to update organization settings",
