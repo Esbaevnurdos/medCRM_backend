@@ -1,5 +1,4 @@
 const express = require("express");
-const upload = require("./upload"); // import multer instance
 
 const adminController = require("../controllers/adminController");
 
@@ -99,7 +98,7 @@ router.get("/appointments-report", adminController.getAllReportAppointments);
 router.post(
   "/upload-photo",
   upload.single("image"),
-  adminController.uploadUserPhoto
+  adminController.updateOrganizationSettings
 );
 
 module.exports = router;

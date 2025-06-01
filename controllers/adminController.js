@@ -1,4 +1,5 @@
 const db = require("../db/queries");
+const axios = require("axios");
 const multer = require("multer");
 // const path = require("path");
 // ... другие импорты
@@ -967,30 +968,53 @@ const getOrganizationSettings = async (req, res) => {
   }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
 const IMGBB_API_KEY = "98b825690cc3e1cca2484d46d23b65ef";
 
 const updateOrganizationSettings = async (req, res) => {
+  // Multer will put file in req.file if multipart/form-data
+  // Other fields (including base64Image) may come in req.body
   const { name, phone, bin, address, director, description, base64Image } =
     req.body;
 
   try {
     let logoUrl = null;
 
-    // Only upload if base64Image is provided
-    if (base64Image && base64Image.trim() !== "") {
+    // 1) If a file was uploaded, use that to upload to ImgBB
+    if (req.file) {
+      const base64ImageFromFile = req.file.buffer.toString("base64");
+
+      const params = new URLSearchParams();
+      params.append("key", IMGBB_API_KEY);
+      params.append("image", base64ImageFromFile);
+
       const response = await axios.post(
         "https://api.imgbb.com/1/upload",
-        null,
-        {
-          params: {
-            key: IMGBB_API_KEY,
-            image: base64Image,
-          },
-        }
+        params.toString(),
+        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
       );
+
+      logoUrl = response.data.data.url;
+
+      // 2) Else if base64Image string was provided in JSON body, upload that
+    } else if (base64Image && base64Image.trim() !== "") {
+      const params = new URLSearchParams();
+      params.append("key", IMGBB_API_KEY);
+      params.append("image", base64Image);
+
+      const response = await axios.post(
+        "https://api.imgbb.com/1/upload",
+        params.toString(),
+        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+      );
+
       logoUrl = response.data.data.url;
     }
 
+    // 3) Update organization settings in DB, logo_url is either a new URL or null (means no change or removal)
     const updated = await db.updateOrganizationSettings({
       name,
       phone,
@@ -998,7 +1022,7 @@ const updateOrganizationSettings = async (req, res) => {
       address,
       director,
       description,
-      logo_url: logoUrl, // null means don't update
+      logo_url: logoUrl,
     });
 
     res.status(200).json({ success: true, data: updated });
@@ -1007,55 +1031,11 @@ const updateOrganizationSettings = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to update organization settings",
-    });
-  }
-};
-
-const storage = multer.memoryStorage(); // store file in memory for processing
-const upload = multer({ storage });
-
-const uploadUserPhoto = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No image file provided" });
-    }
-
-    // Convert buffer to base64 string
-    const base64Image = req.file.buffer.toString("base64");
-
-    // Prepare form data for ImgBB
-    const formData = new URLSearchParams();
-    formData.append("key", IMGBB_API_KEY);
-    formData.append("image", base64Image);
-
-    // Send POST request to ImgBB
-    const response = await axios.post(
-      "https://api.imgbb.com/1/upload",
-      formData.toString(),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
-    );
-
-    // Extract image URL from response
-    const imageUrl = response.data.data.url;
-
-    // You can save imageUrl to your database here if needed
-
-    res.status(200).json({ success: true, imageUrl });
-  } catch (error) {
-    console.error("ImgBB upload error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Image upload failed",
       error: error.message,
     });
   }
 };
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const getExpenseReportByPeriod = async (req, res) => {
   const { type } = req.params;
@@ -1384,6 +1364,7 @@ module.exports = {
   getExpenseCategoryById,
   getOrganizationSettings,
   updateOrganizationSettings,
+  upload,
   getExpenseReportByDateRange,
   getExpenseReportByPeriod,
   createCashboxTransaction,
@@ -1393,5 +1374,4 @@ module.exports = {
   getCashboxTransactions,
   getCashboxReportByPeriod,
   getCashboxReportByDateRange,
-  uploadUserPhoto,
 };
