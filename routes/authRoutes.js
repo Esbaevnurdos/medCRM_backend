@@ -10,6 +10,4 @@ router.post("/login", authController.loginUser);
 router.post("/logout", authController.logoutUser);
 router.get("/captcha", captchaController.generateCaptcha);
 
-router.post("/captcha/verify", captchaController.verifyCaptcha);
-
 module.exports = router;
