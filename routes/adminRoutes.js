@@ -94,10 +94,6 @@ router.get(
 
 router.get("/appointments-report", adminController.getAllReportAppointments);
 
-router.post(
-  "/upload-photo",
-  upload.single("image"),
-  adminController.uploadUserPhoto
-);
+router.post("/upload-photo", adminController.uploadUserPhoto);
 
 module.exports = router;
