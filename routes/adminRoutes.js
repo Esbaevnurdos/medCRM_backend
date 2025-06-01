@@ -1,4 +1,6 @@
 const express = require("express");
+const upload = require("./upload"); // import multer instance
+
 const adminController = require("../controllers/adminController");
 
 const router = express.Router();

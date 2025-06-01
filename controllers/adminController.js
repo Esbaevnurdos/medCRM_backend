@@ -1,4 +1,7 @@
 const db = require("../db/queries");
+const multer = require("multer");
+// const path = require("path");
+// ... другие импорты
 
 // Staff
 
