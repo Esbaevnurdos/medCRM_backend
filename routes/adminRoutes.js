@@ -1,5 +1,7 @@
 const express = require("express");
-
+const multer = require("multer");
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 const adminController = require("../controllers/adminController");
 
 const router = express.Router();
