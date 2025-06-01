@@ -1008,7 +1008,7 @@ const getExpenseReport = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch report",
-      error: error.message, // <- add this temporarily to see what went wrong
+      error: error.message,
     });
   }
 };
@@ -1017,12 +1017,11 @@ const createCashboxTransaction = async (req, res) => {
   try {
     let { service_ids, ...transactionData } = req.body;
 
-    // Normalize to an array if a single number is passed
+    // Normalize single value to array
     if (!Array.isArray(service_ids)) {
       service_ids = [service_ids];
     }
 
-    // Optional: validate it's not empty
     if (service_ids.length === 0) {
       return res.status(400).json({
         success: false,

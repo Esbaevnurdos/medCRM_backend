@@ -863,42 +863,26 @@ const createTransaction = async ({
   comment,
   service_ids,
 }) => {
-  const client = await db.connect();
-  try {
-    await client.query("BEGIN");
+  const insertTransactionQuery = `
+    INSERT INTO transactions (patient_id, specialist_id, amount, payment_method, comment, created_at)
+    VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id;
+  `;
+  const transactionResult = await db.query(insertTransactionQuery, [
+    patient_id,
+    specialist_id,
+    amount,
+    payment_method,
+    comment,
+  ]);
+  const transactionId = transactionResult.rows[0].id;
 
-    const insertTransactionQuery = `
-      INSERT INTO transactions (patient_id, specialist_id, amount, payment_method, comment, created_at)
-      VALUES ($1, $2, $3, $4, $5, NOW())
-      RETURNING *;
-    `;
-    const transactionResult = await client.query(insertTransactionQuery, [
-      patient_id,
-      specialist_id,
-      amount,
-      payment_method,
-      comment,
-    ]);
-    const transaction = transactionResult.rows[0];
+  const insertLinks = `
+    INSERT INTO transaction_services (transaction_id, service_id)
+    VALUES ${service_ids.map((_, i) => `($1, $${i + 2})`).join(", ")};
+  `;
+  await db.query(insertLinks, [transactionId, ...service_ids]);
 
-    const insertServiceLinksQuery = `
-      INSERT INTO transaction_services (transaction_id, service_id) VALUES ${service_ids
-        .map((_, i) => `($1, $${i + 2})`)
-        .join(", ")}
-    `;
-    await client.query(insertServiceLinksQuery, [
-      transaction.id,
-      ...service_ids,
-    ]);
-
-    await client.query("COMMIT");
-    return transaction;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  return transactionId;
 };
 
 const getTransactions = async () => {
