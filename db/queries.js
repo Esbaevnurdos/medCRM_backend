@@ -795,6 +795,30 @@ const deleteAppointment = async (id) => {
   }
 };
 
+const getAllReportAppointments = async () => {
+  const query = `
+    SELECT 
+      a.id,
+      a.appointment_date_time,
+      p.name AS patient_name,
+      s.name AS specialist_name,
+      a.total_revenue,     -- adjust column name if different
+      a.transactions_count -- adjust column name if different
+    FROM appointments a
+    LEFT JOIN patients p ON a.patient_id = p.id
+    LEFT JOIN specialists s ON a.specialist_id = s.id
+    ORDER BY a.appointment_date_time DESC;
+  `;
+
+  try {
+    const result = await db.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching all appointments:", error.message);
+    throw error;
+  }
+};
+
 const addService = async (name, description, price, isAvailable) => {
   const query = `
     INSERT INTO services (title, description, price, is_available)
@@ -1174,6 +1198,7 @@ module.exports = {
   deleteAppointment,
   updateAppointment,
   getAllAppointments,
+  getAllReportAppointments,
   getAppointmentById,
   addService,
   deleteService,
