@@ -974,47 +974,10 @@ const upload = multer({ storage });
 
 const IMGBB_API_KEY = "98b825690cc3e1cca2484d46d23b65ef";
 
-const updateOrganizationSettings = async (req, res) => {
-  // Multer will put file in req.file if multipart/form-data
-  // Other fields (including base64Image) may come in req.body
-  const { name, phone, bin, address, director, description, base64Image } =
-    req.body;
+const updateOrganizationProfile = async (req, res) => {
+  const { name, phone, bin, address, director, description } = req.body;
 
   try {
-    let logoUrl = null;
-
-    // 1) If a file was uploaded, use that to upload to ImgBB
-    if (req.file) {
-      const base64ImageFromFile = req.file.buffer.toString("base64");
-
-      const params = new URLSearchParams();
-      params.append("key", IMGBB_API_KEY);
-      params.append("image", base64ImageFromFile);
-
-      const response = await axios.post(
-        "https://api.imgbb.com/1/upload",
-        params.toString(),
-        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-      );
-
-      logoUrl = response.data.data.url;
-
-      // 2) Else if base64Image string was provided in JSON body, upload that
-    } else if (base64Image && base64Image.trim() !== "") {
-      const params = new URLSearchParams();
-      params.append("key", IMGBB_API_KEY);
-      params.append("image", base64Image);
-
-      const response = await axios.post(
-        "https://api.imgbb.com/1/upload",
-        params.toString(),
-        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-      );
-
-      logoUrl = response.data.data.url;
-    }
-
-    // 3) Update organization settings in DB, logo_url is either a new URL or null (means no change or removal)
     const updated = await db.updateOrganizationSettings({
       name,
       phone,
@@ -1022,19 +985,65 @@ const updateOrganizationSettings = async (req, res) => {
       address,
       director,
       description,
+      logo_url: null, // do NOT change logo_url here
+    });
+
+    res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    console.error("❌ Error updating org profile:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update organization profile",
+      error: error.message,
+    });
+  }
+};
+
+const updateOrganizationLogo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file uploaded",
+      });
+    }
+
+    const base64Image = req.file.buffer.toString("base64");
+
+    const params = new URLSearchParams();
+    params.append("key", IMGBB_API_KEY);
+    params.append("image", base64Image);
+
+    const response = await axios.post(
+      "https://api.imgbb.com/1/upload",
+      params.toString(),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    );
+
+    const logoUrl = response.data.data.url;
+
+    // Update logo_url only, other fields stay unchanged, so pass null for others
+    const updated = await db.updateOrganizationSettings({
+      name: null,
+      phone: null,
+      bin: null,
+      address: null,
+      director: null,
+      description: null,
       logo_url: logoUrl,
     });
 
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
-    console.error("❌ Error updating org settings:", error.message);
+    console.error("❌ Error updating org logo:", error.message);
     res.status(500).json({
       success: false,
-      message: "Failed to update organization settings",
+      message: "Failed to update organization logo",
       error: error.message,
     });
   }
 };
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const getExpenseReportByPeriod = async (req, res) => {
@@ -1363,8 +1372,9 @@ module.exports = {
   deleteExpenseCategory,
   getExpenseCategoryById,
   getOrganizationSettings,
-  updateOrganizationSettings,
+  updateOrganizationLogo,
   upload,
+  updateOrganizationProfile,
   getExpenseReportByDateRange,
   getExpenseReportByPeriod,
   createCashboxTransaction,
