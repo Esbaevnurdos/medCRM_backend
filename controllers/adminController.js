@@ -1101,9 +1101,9 @@ const deleteCashboxTransactionById = async (req, res) => {
 const getCashboxReportController = async (req, res) => {
   try {
     let { start_date, end_date } = req.query;
-    const { type: period } = req.params;
+    const period = req.params.type.toLowerCase();
 
-    // Set default date range: last 30 days if not provided
+    // Default date range: last 30 days
     if (!start_date || !end_date) {
       end_date = new Date().toISOString().slice(0, 10);
       start_date = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
