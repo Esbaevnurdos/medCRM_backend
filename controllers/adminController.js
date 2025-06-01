@@ -1100,14 +1100,15 @@ const deleteCashboxTransactionById = async (req, res) => {
 
 const getCashboxReportController = async (req, res) => {
   try {
-    const { start_date, end_date } = req.query;
+    let { start_date, end_date } = req.query;
     const { type: period } = req.params;
 
+    // Set default date range: last 30 days if not provided
     if (!start_date || !end_date) {
-      return res.status(400).json({
-        success: false,
-        message: "start_date and end_date are required",
-      });
+      end_date = new Date().toISOString().slice(0, 10);
+      start_date = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
     }
 
     if (!["daily", "weekly", "monthly", "yearly"].includes(period)) {
