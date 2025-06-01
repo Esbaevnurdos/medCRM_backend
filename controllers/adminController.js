@@ -1372,8 +1372,6 @@ module.exports = {
   deleteExpenseCategory,
   getExpenseCategoryById,
   getOrganizationSettings,
-  updateOrganizationLogo,
-  upload,
   updateOrganizationProfile,
   getExpenseReportByDateRange,
   getExpenseReportByPeriod,
