@@ -1122,37 +1122,32 @@ const getOrganizationSettings = async () => {
   }
 };
 
-const updateOrganizationSettings = async ({
-  name,
-  phone,
-  bin,
-  address,
-  director,
-  description,
-  logo_url,
-}) => {
+const updateOrganization = async (id, data) => {
+  const { name, phone, bin_iin, address, director, description } = data;
+
   const query = `
     UPDATE organization
-    SET name = $1,
-        phone = $2,
-        bin = $3,
-        address = $4,
-        director = $5,
-        description = $6,
-        logo_url = COALESCE($7, logo_url)
-    WHERE id = 1
+    SET
+      name = $1,
+      phone = $2,
+      bin_iin = $3,
+      address = $4,
+      director = $5,
+      description = $6,
+      updated_at = NOW()
+    WHERE id = $7
     RETURNING *;
   `;
 
-  const values = [name, phone, bin, address, director, description, logo_url];
+  const values = [name, phone, bin_iin, address, director, description, id];
 
-  try {
-    const result = await db.query(query, values);
-    return result.rows[0]; // 🟢 This is what gets sent back in the response
-  } catch (error) {
-    console.error("DB update error:", error.message);
-    throw error;
+  const result = await db.query(query, values);
+
+  if (result.rowCount === 0) {
+    throw new Error("Organization not found");
   }
+
+  return result.rows[0];
 };
 
 module.exports = {
@@ -1219,7 +1214,7 @@ module.exports = {
   deleteExpenseCategory,
   getExpenseCategoryById,
   getOrganizationSettings,
-  updateOrganizationSettings,
+  updateOrganization,
   getExpenseReport,
   createTransaction,
   getTransactions,

@@ -97,7 +97,7 @@ router.get(
 
 router.get("/appointments-report", adminController.getAllReportAppointments);
 
-router.put("/update-profile", adminController.updateOrganizationProfile);
+router.put("/update-profile", adminController.updateOrganization);
 // router.put(
 //   "/update-logo",
 //   upload.single("logo"),

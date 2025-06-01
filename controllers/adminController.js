@@ -969,33 +969,18 @@ const getOrganizationSettings = async (req, res) => {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-// const IMGBB_API_KEY = "98b825690cc3e1cca2484d46d23b65ef";
-
-const updateOrganizationProfile = async (req, res) => {
-  const { name, phone, bin, address, director, description } = req.body;
+const updateOrganization = async (req, res) => {
+  const { id } = req.params;
 
   try {
-    const updated = await db.updateOrganizationSettings({
-      name,
-      phone,
-      bin,
-      address,
-      director,
-      description,
-      logo_url: null, // do NOT change logo_url here
+    const updated = await organizationQueries.updateOrganization(id, req.body);
+    res.status(200).json({
+      message: "Organization updated successfully",
+      data: updated,
     });
-
-    res.status(200).json({ success: true, data: updated });
-  } catch (error) {
-    console.error("❌ Error updating org profile:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Failed to update organization profile",
-      error: error.message,
-    });
+  } catch (err) {
+    console.error("Update org error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -1372,7 +1357,7 @@ module.exports = {
   deleteExpenseCategory,
   getExpenseCategoryById,
   getOrganizationSettings,
-  updateOrganizationProfile,
+  updateOrganization,
   getExpenseReportByDateRange,
   getExpenseReportByPeriod,
   createCashboxTransaction,
