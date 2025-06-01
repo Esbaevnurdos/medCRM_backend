@@ -1,5 +1,4 @@
 const db = require("../db/queries");
-const db = require("../db"); // ✅ now this db has `.query`
 
 // Staff
 
@@ -994,7 +993,7 @@ const getExpenseReport = async (req, res) => {
   `;
 
   try {
-    const result = await getExpenseReport(query, values);
+    const result = await db.getExpenseReport(query, values);
 
     const data = result.rows.map((row, i) => ({
       id: `R${i + 1}`,
