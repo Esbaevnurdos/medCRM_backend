@@ -274,17 +274,11 @@ const deletePermission = async (req, res) => {
 const addBranch = async (req, res) => {
   const { name, address, email, phoneNumber, status } = req.body;
   try {
-    const branch = await db.addBranch(
-      name,
-      address,
-      email,
-      phoneNumber,
-      status
-    );
-    res.status(201).json([branch]); // wrap the returned object in an array
+    const branch = await db.addBranch(name, address, email, phoneNumber, status);
+    res.status(201).json([branch]);
   } catch (error) {
     console.error("Error adding branch:", error.message);
-    res.status(500).json({ success: false, message: "Failed to add branch" });
+    res.status(500).json([{ error: "Failed to add branch" }]);
   }
 };
 
@@ -292,22 +286,23 @@ const getBranchById = async (req, res) => {
   const { id } = req.params;
   try {
     const branch = await db.getBranchById(id);
-    res.status(200).json([branch]); // return single object as array
+    if (!branch) {
+      return res.status(404).json([{ error: "Branch not found" }]);
+    }
+    res.status(200).json([branch]);
   } catch (error) {
     console.error("Error fetching branch by ID:", error.message);
-    res.status(404).json({ success: false, message: "Branch not found" });
+    res.status(500).json([{ error: "Failed to fetch branch" }]);
   }
 };
 
 const getAllBranches = async (req, res) => {
   try {
     const branches = await db.getAllBranches();
-    res.status(200).json(branches); // because db.getAllBranches() already returns an array
+    res.status(200).json(branches); // already an array
   } catch (error) {
     console.error("Error fetching branches:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch branches" });
+    res.status(500).json([{ error: "Failed to fetch branches" }]);
   }
 };
 
@@ -315,20 +310,11 @@ const updateBranch = async (req, res) => {
   const { id } = req.params;
   const { name, address, email, phoneNumber, status } = req.body;
   try {
-    const updatedBranch = await db.updateBranch(
-      id,
-      name,
-      address,
-      email,
-      phoneNumber,
-      status
-    );
-    res.status(200).json([updatedBranch]); // return updated object as an array
+    const updatedBranch = await db.updateBranch(id, name, address, email, phoneNumber, status);
+    res.status(200).json([updatedBranch]);
   } catch (error) {
     console.error("Error updating branch:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to update branch" });
+    res.status(500).json([{ error: "Failed to update branch" }]);
   }
 };
 
@@ -339,11 +325,10 @@ const deleteBranch = async (req, res) => {
     res.status(200).json([{ message: "Branch deleted successfully" }]);
   } catch (error) {
     console.error("Error deleting branch:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to delete branch" });
+    res.status(500).json([{ error: "Failed to delete branch" }]);
   }
 };
+
 
 const addSpecialist = async (req, res) => {
   const {
@@ -398,7 +383,6 @@ const deleteSpecialist = async (req, res) => {
   } catch (error) {
     console.error("Error deleting specialist:", error.message);
     res.status(500).json([{ error: "Failed to delete specialist" }]);
-
   }
 };
 
@@ -407,29 +391,25 @@ const getSpecialistById = async (req, res) => {
   try {
     const specialist = await db.getSpecialistById(id);
     if (!specialist) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Specialist not found" });
+      return res.status(404).json([{ error: "Specialist not found" }]);
     }
-        res.status(200).json([specialist]);
-
+    res.status(200).json([specialist]);
   } catch (error) {
     console.error("Error fetching specialist by ID:", error.message);
-     res.status(500).json([{ error: "Failed to fetch specialist" }]);
+    res.status(500).json([{ error: "Failed to fetch specialist" }]);
   }
 };
 
 const getAllSpecialists = async (req, res) => {
   try {
     const specialists = await db.getAllSpecialists();
-    res.status(200).json({ success: true, data: specialists });
+    res.status(200).json(specialists); // just return the array
   } catch (error) {
     console.error("Error fetching specialists:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch specialists" });
+    res.status(500).json([{ error: "Failed to fetch specialists" }]);
   }
 };
+
 
 const addPatient = async (req, res) => {
   const {
@@ -784,7 +764,7 @@ const addExpense = async (req, res) => {
 const getExpenses = async (_req, res) => {
   try {
     const expenses = await db.getExpenses();
-    res.status(200).json(expenses);
+    res.status(200).json(expenses); // Already an array
   } catch (error) {
     console.error("Error fetching expenses:", error.message);
     res.status(500).json([{ error: "Failed to get expenses" }]);
@@ -797,9 +777,7 @@ const getExpenseById = async (req, res) => {
   try {
     const expense = await db.getExpenseById(id);
     if (!expense) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Expense not found" });
+      return res.status(404).json([{ error: "Expense not found" }]);
     }
     res.status(200).json([expense]);
   } catch (error) {
@@ -815,15 +793,12 @@ const editExpense = async (req, res) => {
   try {
     const expense = await db.updateExpense(id, category, amount, description);
     if (!expense) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Expense not found" });
+      return res.status(404).json([{ error: "Expense not found" }]);
     }
     res.status(200).json([expense]);
   } catch (error) {
     console.error("Error updating expense:", error.message);
     res.status(500).json([{ error: "Failed to update expense" }]);
-
   }
 };
 
@@ -833,38 +808,23 @@ const deleteExpense = async (req, res) => {
   try {
     const expense = await db.deleteExpense(id);
     if (!expense) {
-        return res.status(404).json([{ error: "Expense not found" }]);
-
+      return res.status(404).json([{ error: "Expense not found" }]);
     }
-        res.status(200).json([{ message: "Expense deleted", ...expense }]);
-
+    res.status(200).json([{ message: "Expense deleted", ...expense }]);
   } catch (error) {
     console.error("Error deleting expense:", error.message);
     res.status(500).json([{ error: "Failed to delete expense" }]);
-
-  }
-};
-
-const addExpenseCategory = async (req, res) => {
-  const { name, description } = req.body;
-
-  try {
-    const category = await db.addExpenseCategory(name, description);
-    res.status(201).json([category]);
-  } catch (error) {
-    console.error("Error adding expense category:", error.message);
-    res.status(500).json([{ error: "Failed to add category" }]);
   }
 };
 
 const getExpenseCategories = async (_req, res) => {
   try {
     const categories = await db.getExpenseCategories();
-    res.status(200).json(categories);
+    res.status(200).json(categories); // Already an array
   } catch (error) {
     console.error("Error getting expense categories:", error.message);
-        res.status(500).json([{ error: "Failed to fetch categories" }]);
-
+    res.status(500).json([{ error: "Failed to fetch categories" }]);
+  }
 };
 
 const editExpenseCategory = async (req, res) => {
@@ -874,14 +834,12 @@ const editExpenseCategory = async (req, res) => {
   try {
     const category = await db.updateExpenseCategory(id, name, description);
     if (!category) {
-            return res.status(404).json([{ error: "Category not found" }]);
-
+      return res.status(404).json([{ error: "Category not found" }]);
     }
     res.status(200).json([category]);
   } catch (error) {
     console.error("Error updating category:", error.message);
-        res.status(500).json([{ error: "Failed to update category" }]);
-
+    res.status(500).json([{ error: "Failed to update category" }]);
   }
 };
 
@@ -891,15 +849,12 @@ const getExpenseCategoryById = async (req, res) => {
   try {
     const category = await db.getExpenseCategoryById(id);
     if (!category) {
-            return res.status(404).json([{ error: "Category not found" }]);
-
+      return res.status(404).json([{ error: "Category not found" }]);
     }
-        res.status(200).json([category]);
-
+    res.status(200).json([category]);
   } catch (error) {
     console.error("Error fetching category by ID:", error.message);
-        res.status(500).json([{ error: "Failed to fetch category" }]);
-
+    res.status(500).json([{ error: "Failed to fetch category" }]);
   }
 };
 
@@ -909,16 +864,15 @@ const deleteExpenseCategory = async (req, res) => {
   try {
     const category = await db.deleteExpenseCategory(id);
     if (!category) {
-            return res.status(404).json([{ error: "Category not found" }]);
-
+      return res.status(404).json([{ error: "Category not found" }]);
     }
-        res.status(200).json([{ message: "Category deleted", ...category }]);
-
+    res.status(200).json([{ message: "Category deleted", ...category }]);
   } catch (error) {
     console.error("Error deleting category:", error.message);
     res.status(500).json([{ error: "Failed to delete category" }]);
   }
 };
+
 
 // GET /organization
 const getOrganizationSettings = async (req, res) => {
