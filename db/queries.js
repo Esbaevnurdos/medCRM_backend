@@ -422,15 +422,16 @@ const updateBranch = async (id, name, address, email, phoneNumber, status) => {
 };
 
 const deleteBranch = async (id) => {
-  const query = `DELETE FROM branches WHERE id = $1;`;
+  const query = `DELETE FROM branches WHERE id = $1 RETURNING *;`;
   try {
-    await db.query(query, [id]);
-    console.log("Branch deleted successfully");
+    const result = await db.query(query, [id]);
+    return result.rows[0]; // return deleted row
   } catch (error) {
     console.error("Error deleting branch:", error.message);
     throw error;
   }
 };
+
 
 const addSpecialist = async (
   fio,

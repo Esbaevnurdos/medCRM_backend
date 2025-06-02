@@ -321,13 +321,17 @@ const updateBranch = async (req, res) => {
 const deleteBranch = async (req, res) => {
   const { id } = req.params;
   try {
-    await db.deleteBranch(id);
-    res.status(200).json([{ message: "Branch deleted successfully" }]);
+    const deletedBranch = await db.deleteBranch(id);
+    if (!deletedBranch) {
+      return res.status(404).json([{ error: "Branch not found" }]);
+    }
+    res.status(200).json([{ message: "Branch deleted successfully", ...deletedBranch }]);
   } catch (error) {
     console.error("Error deleting branch:", error.message);
     res.status(500).json([{ error: "Failed to delete branch" }]);
   }
 };
+
 
 
 const addSpecialist = async (req, res) => {
