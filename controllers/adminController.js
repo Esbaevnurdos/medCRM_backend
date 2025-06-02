@@ -35,7 +35,11 @@ const addUserController = async (req, res) => {
       role
     );
 
-    res.status(201).json([newUser]);
+    res.status(201).json({
+      success: true,
+      message: "User added successfully",
+      users: [newUser], // Wrap single object inside an array here
+    });
   } catch (error) {
     console.error("Error adding user:", error.message);
     res.status(500).json({ error: "Server error during user creation" });
