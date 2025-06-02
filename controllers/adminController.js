@@ -120,18 +120,14 @@ const createRoleController = async (req, res) => {
 
   try {
     const newRole = await db.createRole(roleName, accessLevel);
-    res.status(201).json({
-      success: true,
-      message: "Role created successfully",
-      role: newRole,
-    });
+    res.status(201).json([newRole]);
   } catch (error) {
     if (error.message === "Role already exists") {
       return res.status(409).json({ error: "Role already exists" }); // 409 = Conflict
     }
 
     console.error("Error creating role:", error.message);
-    res.status(500).json({ error: "Server error during role creation" });
+    return res.status(409).json([{ error: "Role already exists" }]);
   }
 };
 
@@ -139,7 +135,7 @@ const createRoleController = async (req, res) => {
 const getRolesController = async (req, res) => {
   try {
     const roles = await db.getAllRoles();
-    res.json({ success: true, roles });
+    res.status(200).json(roles); // Already an array from DB
   } catch (error) {
     console.error("Error fetching roles:", error.message);
     res.status(500).json({ error: "Failed to fetch roles" });
@@ -159,11 +155,7 @@ const updateRoleController = async (req, res) => {
 
   try {
     const updatedRole = await db.updateRole(id, roleName, accessLevel);
-    res.json({
-      success: true,
-      message: "Role updated successfully",
-      role: updatedRole,
-    });
+    res.status(200).json([updatedRole]);
   } catch (error) {
     console.error("Error updating role:", error.message);
     res.status(500).json({ error: "Server error during role update" });
@@ -178,7 +170,7 @@ const deleteRoleController = async (req, res) => {
     res.json({ success: true, message: "Role deleted successfully" });
   } catch (error) {
     console.error("Error deleting role:", error.message);
-    res.status(500).json({ error: "Server error during role deletion" });
+    res.status(200).json([{ message: "Role deleted successfully" }]);
   }
 };
 
@@ -191,10 +183,10 @@ const getRoleByIdController = async (req, res) => {
       return res.status(404).json({ error: "Role not found" });
     }
 
-    res.status(200).json({ success: true, role });
+    res.status(200).json([role]);
   } catch (error) {
     console.error("Error getting role by ID:", error.message);
-    res.status(500).json({ error: "Server error while fetching role" });
+    return res.status(404).json([{ error: "Role not found" }]);
   }
 };
 
@@ -378,12 +370,10 @@ const addSpecialist = async (req, res) => {
       status,
       specialistType
     );
-    res.status(201).json({ success: true, data: specialist });
+    res.status(201).json([specialist]);
   } catch (error) {
     console.error("Error adding specialist:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to add specialist" });
+    res.status(500).json([{ error: "Failed to add specialist" }]);
   }
 };
 
@@ -400,12 +390,10 @@ const editSpecialist = async (req, res) => {
       status,
       specialistType
     );
-    res.status(200).json({ success: true, data: updatedSpecialist });
+    res.status(200).json([updatedSpecialist]);
   } catch (error) {
     console.error("Error updating specialist:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to update specialist" });
+    res.status(500).json([{ error: "Failed to update specialist" }]);
   }
 };
 
@@ -413,14 +401,11 @@ const deleteSpecialist = async (req, res) => {
   const { id } = req.params;
   try {
     await db.deleteSpecialist(id);
-    res
-      .status(200)
-      .json({ success: true, message: "Specialist deleted successfully" });
+    res.status(200).json([{ message: "Specialist deleted successfully" }]);
   } catch (error) {
     console.error("Error deleting specialist:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to delete specialist" });
+    res.status(500).json([{ error: "Failed to delete specialist" }]);
+
   }
 };
 
@@ -433,12 +418,11 @@ const getSpecialistById = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Specialist not found" });
     }
-    res.status(200).json({ success: true, data: specialist });
+        res.status(200).json([specialist]);
+
   } catch (error) {
     console.error("Error fetching specialist by ID:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch specialist" });
+     res.status(500).json([{ error: "Failed to fetch specialist" }]);
   }
 };
 
