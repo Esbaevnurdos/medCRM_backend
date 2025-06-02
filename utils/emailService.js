@@ -5,7 +5,7 @@ const sendOTPEmail = async (email, otp) => {
     service: "gmail",
     auth: {
       user: "nurdosesbaev82@gmail.com",
-      pass: "ztlk wpfo zfmt zozc",
+      pass: "lfhf onrx cdnp fynp",
     },
   });
 
