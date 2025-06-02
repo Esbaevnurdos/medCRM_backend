@@ -63,7 +63,7 @@ const deleteUserController = async (req, res) => {
 const getAllUsersController = async (req, res) => {
   try {
     const users = await db.getAllUsers();
-    res.status(200).json({ success: true, users });
+    res.status(200).json(users); // Now returns just an array, not wrapped in { success: true, users: [...] }
   } catch (error) {
     console.error("Error fetching users:", error.message);
     res.status(500).json({ error: "Server error while fetching users" });
