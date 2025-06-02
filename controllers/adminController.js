@@ -781,20 +781,20 @@ const addExpense = async (req, res) => {
 
   try {
     const expense = await db.addExpense(category, amount, description);
-    res.status(201).json({ success: true, data: expense });
+    res.status(201).json([expense]);
   } catch (error) {
     console.error("Error adding expense:", error.message);
-    res.status(500).json({ success: false, message: "Failed to add expense" });
+    res.status(500).json([{ error: "Failed to add expense" }]);
   }
 };
 
 const getExpenses = async (_req, res) => {
   try {
     const expenses = await db.getExpenses();
-    res.status(200).json({ success: true, data: expenses });
+    res.status(200).json(expenses);
   } catch (error) {
     console.error("Error fetching expenses:", error.message);
-    res.status(500).json({ success: false, message: "Failed to get expenses" });
+    res.status(500).json([{ error: "Failed to get expenses" }]);
   }
 };
 
@@ -808,10 +808,10 @@ const getExpenseById = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Expense not found" });
     }
-    res.status(200).json({ success: true, data: expense });
+    res.status(200).json([expense]);
   } catch (error) {
     console.error("Error fetching expense by ID:", error.message);
-    res.status(500).json({ success: false, message: "Failed to get expense" });
+    res.status(500).json([{ error: "Failed to get expense" }]);
   }
 };
 
@@ -826,12 +826,11 @@ const editExpense = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Expense not found" });
     }
-    res.status(200).json({ success: true, data: expense });
+    res.status(200).json([expense]);
   } catch (error) {
     console.error("Error updating expense:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to update expense" });
+    res.status(500).json([{ error: "Failed to update expense" }]);
+
   }
 };
 
@@ -841,18 +840,15 @@ const deleteExpense = async (req, res) => {
   try {
     const expense = await db.deleteExpense(id);
     if (!expense) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Expense not found" });
+        return res.status(404).json([{ error: "Expense not found" }]);
+
     }
-    res
-      .status(200)
-      .json({ success: true, message: "Expense deleted", data: expense });
+        res.status(200).json([{ message: "Expense deleted", ...expense }]);
+
   } catch (error) {
     console.error("Error deleting expense:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to delete expense" });
+    res.status(500).json([{ error: "Failed to delete expense" }]);
+
   }
 };
 
