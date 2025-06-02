@@ -817,6 +817,19 @@ const deleteExpense = async (req, res) => {
   }
 };
 
+const addExpenseCategory = async (req, res) => {
+  const { name, description } = req.body;
+
+  try {
+    const category = await db.addExpenseCategory(name, description);
+    res.status(201).json([category]); // returns an array
+  } catch (error) {
+    console.error("Error adding expense category:", error.message);
+    res.status(500).json([{ error: "Failed to add category" }]); // also an array
+  }
+};
+
+
 const getExpenseCategories = async (_req, res) => {
   try {
     const categories = await db.getExpenseCategories();
