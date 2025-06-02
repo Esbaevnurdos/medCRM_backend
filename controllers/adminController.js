@@ -290,6 +290,7 @@ const addBranch = async (req, res) => {
       status
     );
     res.status(201).json({ success: true, data: branch });
+    res.status(201).json([branch]); // wrap the returned object in an array
   } catch (error) {
     console.error("Error adding branch:", error.message);
     res.status(500).json({ success: false, message: "Failed to add branch" });
@@ -301,6 +302,7 @@ const getBranchById = async (req, res) => {
   try {
     const branch = await db.getBranchById(id);
     res.status(200).json({ success: true, data: branch });
+    res.status(200).json([branch]); // return single object as array
   } catch (error) {
     console.error("Error fetching branch by ID:", error.message);
     res.status(404).json({ success: false, message: "Branch not found" });
@@ -311,6 +313,7 @@ const getAllBranches = async (req, res) => {
   try {
     const branches = await db.getAllBranches();
     res.status(200).json({ success: true, data: branches });
+    res.status(200).json(branches); // because db.getAllBranches() already returns an array
   } catch (error) {
     console.error("Error fetching branches:", error.message);
     res
@@ -332,6 +335,7 @@ const updateBranch = async (req, res) => {
       status
     );
     res.status(200).json({ success: true, data: updatedBranch });
+    res.status(200).json([updatedBranch]); // return updated object as an array
   } catch (error) {
     console.error("Error updating branch:", error.message);
     res
@@ -347,6 +351,7 @@ const deleteBranch = async (req, res) => {
     res
       .status(200)
       .json({ success: true, message: "Branch deleted successfully" });
+    res.status(200).json([{ message: "Branch deleted successfully" }]);
   } catch (error) {
     console.error("Error deleting branch:", error.message);
     res
