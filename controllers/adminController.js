@@ -35,11 +35,7 @@ const addUserController = async (req, res) => {
       role
     );
 
-    res.status(201).json({
-      success: true,
-      message: "User added successfully",
-      user: newUser,
-    });
+    res.status(201).json([newUser]);
   } catch (error) {
     console.error("Error adding user:", error.message);
     res.status(500).json({ error: "Server error during user creation" });
@@ -53,10 +49,10 @@ const deleteUserController = async (req, res) => {
     await db.deleteUser(id);
     res
       .status(200)
-      .json({ success: true, message: "User deleted successfully" });
+      .json([{ success: true, message: "User deleted successfully" }]);
   } catch (error) {
     console.error("Error deleting user:", error.message);
-    res.status(500).json({ error: "Server error during user deletion" });
+    res.status(500).json([{ error: "Server error during user deletion" }]);
   }
 };
 
@@ -79,7 +75,7 @@ const getUserByIdController = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ success: true, user });
+    res.status(200).json([user]);
   } catch (error) {
     console.error("Error fetching user by ID:", error.message);
     res.status(500).json({ error: "Server error while fetching user" });
@@ -102,11 +98,7 @@ const updateUserController = async (req, res) => {
       role
     );
 
-    res.status(200).json({
-      success: true,
-      message: "User updated successfully",
-      user: updatedUser,
-    });
+    res.status(200).json([updatedUser]);
   } catch (error) {
     console.error("Error updating user:", error.message);
     res.status(500).json({ error: "Server error during user update" });
