@@ -425,7 +425,7 @@ const deleteBranch = async (id) => {
   const query = `DELETE FROM branches WHERE id = $1 RETURNING *;`;
   try {
     const result = await db.query(query, [id]);
-    return result.rows[0]; // return deleted row
+    return result.rows[0]; // deleted row
   } catch (error) {
     console.error("Error deleting branch:", error.message);
     throw error;

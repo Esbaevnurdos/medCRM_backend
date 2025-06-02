@@ -318,17 +318,14 @@ const updateBranch = async (req, res) => {
   }
 };
 
-const deleteBranch = async (req, res) => {
-  const { id } = req.params;
+const deleteBranch = async (id) => {
+  const query = `DELETE FROM branches WHERE id = $1 RETURNING *;`;
   try {
-    const deletedBranch = await db.deleteBranch(id);
-    if (!deletedBranch) {
-      return res.status(404).json([{ error: "Branch not found" }]);
-    }
-    res.status(200).json([{ message: "Branch deleted successfully", ...deletedBranch }]);
+    const result = await db.query(query, [id]);
+    return result.rows[0]; // deleted row
   } catch (error) {
     console.error("Error deleting branch:", error.message);
-    res.status(500).json([{ error: "Failed to delete branch" }]);
+    throw error;
   }
 };
 
